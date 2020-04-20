@@ -1,0 +1,139 @@
+{% extends 'base_main.html' %}
+{% block head %}
+    <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel='stylesheet'>
+
+    <link href="{{ url_for('static', filename='fullcalendar/core/main.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='fullcalendar/daygrid/main.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='fullcalendar/bootstrap/main.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='fullcalendar/list/main.css') }}" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='fullcalendar/core/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='fullcalendar/daygrid/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='fullcalendar/bootstrap/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='fullcalendar/interaction/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='fullcalendar/list/main.js') }}"></script>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            plugins: [ 'dayGrid', 'interaction', 'list', 'bootstrap'],
+            themeSystem: 'bootstrap',
+            header: { right: 'today,dayGridMonth,listMonth, prev,next ' }, // buttons for switching between views
+            // defaultView: 'listMonth',
+            firstDay: 1,
+            eventLimit: true, // allow "more" link when too many events
+
+            events: '/api/events',
+/*
+            events: [
+                {
+                    id: '12',
+                    title: 'Meeting',
+                    start: '2020-04-12T14:30:00',
+                    //end: '2020-04-12T14:30:00',
+                    allDay: false,
+                    extendedProps: {
+                        status: 'done',
+                        details: 'The quick brown fox jumps over the lazy dog!',
+                    }
+                },
+                {
+                    id: '13',
+                    title: 'Birthday Party',
+                    start: '2020-04-13T07:00:00',
+                    allDay: false,
+                    backgroundColor: 'green',
+                    borderColor: 'green'
+                },
+                {
+                    id: '14',
+                    title: 'Doctor Visit',
+                    start: '2020-04-13',
+                    allDay: true,
+                    backgroundColor: 'green',
+                    borderColor: 'green'
+                },
+            ],
+*/
+            eventTimeFormat: { // like '14:30:00'
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            },
+
+            eventRender: function(info) {
+                if (info.event.extendedProps.status === 'done') {
+
+                // Change background color of row
+                info.el.style.backgroundColor = 'red';
+
+                // Change color of dot marker
+                var dotEl = info.el.getElementsByClassName('fc-event-dot')[0];
+                if (dotEl) {
+                    dotEl.style.backgroundColor = 'white';
+                }
+            }
+            },
+
+           eventClick: function(info) {
+            alert('Event: ' + info.event.title + '\n\n' + 'Description: ' + info.event.extendedProps.details);
+            //alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
+            //alert('View: ' + info.view.type);
+
+            // change the border color just for fun
+            info.el.style.borderColor = 'red';
+          }
+
+        });
+
+        calendar.render();
+      });
+
+    </script>
+
+{% endblock %}
+
+{% block pagehead %}
+    Events Calendar
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="calendar" id="calendar">
+
+    </div>
+
+    <div id="calendarModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span> <span>close</span></button>
+                <h4 id="modalTitle" class="modal-title"></h4>
+            </div>
+            <div id="modalBody" class="modal-body"> </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+
+
+{% endblock %}
+
+
+<!--
+    <script>
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            plugins: [ 'bootstrap' ],
+            themeSystem: 'bootstrap'
+        });
+    </script>
+-->

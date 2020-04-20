@@ -1,0 +1,6 @@
+*.pyc
+__pycache__/
+
+event_env/
+start_app.sh
+*.db

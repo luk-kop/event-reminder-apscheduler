@@ -1,0 +1,71 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block pagehead %}
+    User details
+{% endblock %}
+
+{% block body %}
+<form action="" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="form-row">
+        <div class="col-md-4 mb-3">
+            <label for="id-username">Username</label>
+            <input type="text" class="form-control" value="{{ user.username }}" id="id-username" name="username" min="1" max="40" required>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="id-email">Email</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="id-email-prepend">@</span>
+                </div>
+                <input type="email" class="form-control" value="{{ user.email }}" id="id-email" name="email" min="1" max="40" required>
+            </div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="col-md-2 mb-3">
+            <label for="id-role">Role</label>
+                <select id="id-role" class="form-control" name="role">
+                    {% if user.is_admin() %}
+                        <option value="admin" selected>Admin</option>
+                        <option value="user">User</option>
+                    {% else %}
+                        <option value="admin">Admin</option>
+                        <option value="user" selected>User</option>
+                    {% endif %}
+                </select>
+        </div>
+        <div class="col-md-2 mb-3">
+            <label for="id-access">Can log in?</label>
+            <select id="id-access" class="form-control" name="access">
+                {% if user.access_granted %}
+                    <option value="True" selected>Yes</option>
+                    <option value="False">No</option>
+                {% else %}
+                    <option value="True">Yes</option>
+                    <option value="False" selected>No</option>
+                {% endif %}
+            </select>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="col-md-4 mb-3">
+            <label for="id-password">Password</label>
+            <input type="password" class="form-control" placeholder="New password..." id="id-password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Password must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" name="password" min="0" max="40">
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="id-password2">Confirm password</label>
+            <input type="password" class="form-control" placeholder="Confirm new password..." id="id-password2" name="password2" min="0" max="40">
+        </div>
+    </div>
+    <input class="btn btn-primary" type="submit" value="Submit">
+    <input type="submit" class="btn btn-danger" name="cancel-btn" value="Cancel" formnovalidate>
+    <!--<button type="button" class="btn btn-danger" onclick="window.history.back();">Cancel</button>-->
+</form>
+
+{% endblock %}
+
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/pass_conf.js') }}"></script>
+{% endblock %}

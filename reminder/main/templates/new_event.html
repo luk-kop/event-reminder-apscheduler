@@ -1,0 +1,189 @@
+{% extends 'base_main.html' %}
+
+{% block pagehead %}
+    New Event
+{% endblock %}
+
+{% block body %}
+<form action="" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="form-row">
+        <div class="col-md-5 mb-3">
+            <label for="id-title">Title</label>
+            <input type="text" class="form-control" placeholder="Event's title" id="id-title" name="title" width="60" min="1" max="40" required>
+        </div>
+        <div class="col-md-2 mb-3">
+            <label for="id-allday">All day event?</label>
+            <select id="id-allday" class="form-control col-md-6" name="allday">
+                <option value="True">Yes</option>
+                <option value="False">No</option>
+            </select>
+        </div>
+    </div>
+    <label for="id-row_event_date">Time of event</label>
+    <div class="form-row" id="id-row_event_date">
+        <div class="input-group mb-3 col-md-5" id="id-date_time_event_start">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Event start</span>
+            </div>
+            <input class="form-control text-center" type="date" id="id-date_event_start" name="date_event_start" value="{{ today }}" min="{{ today }}" pattern="\d{4}-\d{2}-\d{2}" required>
+            <input class="form-control text-center" type="time" id="id-time_event_start" name="time_event_start" disabled>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="input-group mb-3 col-md-5" id="id-date_time_event_stop">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Event stop</span>
+            </div>
+            <input class="form-control text-center" type="date" id="id-date_event_stop" name="date_event_stop" value="{{ today }}" min="{{ today }}" pattern="\d{4}-\d{2}-\d{2}" required>
+            <input class="form-control text-center" type="time" id="id-time_event_stop" name="time_event_stop" disabled>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="input-group mb-3 col-md-7">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Details</span>
+            </div>
+            <textarea class="form-control" aria-label="Details" placeholder="Event's details" id="id-details" name="details" maxlength="200"></textarea>
+        </div>
+    </div>
+
+    <div class="form-row mb-3">
+        <div class="input-group col-md-2">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Notify?</span>
+            </div>
+            <select class="form-control" id="id-to_notify" name="to_notify">
+                <option value="True">Yes</option>
+                <option value="False">No</option>
+            </select>
+        </div>
+        <div class="input-group col-md-5" id="id-date_time_notify">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Reminder date</span>
+            </div>
+            <input class="form-control text-center" type="date" id="id-date_notify" name="date_notify" value="{{ today }}" min="{{ today }}" pattern="\d{4}-\d{2}-\d{2}" required>
+            <input class="form-control text-center" type="time" id="id-time_notify" name="time_notify" value="08:00" required>
+        </div>
+
+
+
+    </div>
+
+    <div class="form-row">
+        <div class="input-group mb-4 col-md-4">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Users to notify</span>
+            </div>
+            <select class="form-control" id="id-notified_user" name="notified_user" multiple size="3" required>
+                {% for user in users %}
+                <option value="{{ user.id }}">{{ user.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <input class="btn btn-primary" type="submit" value="Submit">
+    <input type="submit" class="btn btn-danger" name="cancel-btn" value="Cancel" formnovalidate>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type='text/javascript'>
+    document.getElementById("id-allday").onchange = function () {
+        let time_start = document.getElementById("id-time_event_start");
+        let time_stop = document.getElementById("id-time_event_stop");
+        if (this.value == 'True') {
+            time_start.value = null;
+            time_stop.value = null;
+            time_start.disabled = true;
+            time_stop.disabled = true;
+
+            }
+        else {
+            time_start.disabled = false;
+            time_stop.disabled = false;
+            time_start.value = "08:00";
+            time_stop.value = "09:00";
+            time_stop.setCustomValidity("");
+            }
+    };
+    document.getElementById("id-to_notify").onchange = function () {
+        let date_notify = document.getElementById("id-date_notify");
+        let time_notify = document.getElementById("id-time_notify");
+        let users_notified = document.getElementById("id-notified_user");
+        let date = new Date();
+        let day = date.getDate();
+        let month = date.getMonth() + 1;
+        let year = date.getFullYear();
+        if (month < 10) month = "0" + month;
+        if (day < 10) day = "0" + day;
+        let today = year + "-" + month + "-" + day;
+        if (this.value == 'False') {
+            date_notify.value = null;
+            time_notify.value = null;
+            date_notify.disabled = true;
+            time_notify.disabled = true;
+            users_notified.disabled = true;
+            }
+        else {
+            date_notify.disabled = false;
+            time_notify.disabled = false;
+            users_notified.disabled = false;
+            date_notify.value = today;
+            time_notify.value = "08:00";
+            if (date_start.value < date_notify.value) {
+                date_notify.setCustomValidity("Should be earlier than the start date.");
+                }
+            else {
+                date_notify.setCustomValidity("");
+                };
+            };
+    };
+
+    function validateTimeEvent() {
+    var date_start = document.getElementById("id-date_event_start");
+    var date_stop = document.getElementById("id-date_event_stop");
+    var time_start = document.getElementById("id-time_event_start");
+    var time_stop = document.getElementById("id-time_event_stop");
+    var date_notify = document.getElementById("id-date_notify");
+    var all_day = document.getElementById("id-allday");
+
+
+    if ((all_day.value == 'True') && (this == date_start)) {
+        date_stop.value = date_start.value;
+    };
+    if (date_start.value > date_stop.value) {
+        date_stop.setCustomValidity("Should be later than the start date.");
+    } else if ((date_start.value == date_stop.value) && (time_start.value > time_stop.value)) {
+        time_stop.setCustomValidity("Should be later than the start time.");
+        date_stop.setCustomValidity("");
+    } else {
+        date_stop.setCustomValidity("");
+        time_stop.setCustomValidity("");
+        };
+    if (date_start.value < date_notify.value) {
+        date_notify.setCustomValidity("Should be earlier than the start date.");
+    } else {
+        date_notify.setCustomValidity("");
+        };
+    };
+
+    function validateNotifyTimeEvent() {
+    var date_start = document.getElementById("id-date_event_start");
+    var date_notify = document.getElementById("id-date_notify");
+    if (date_start.value < date_notify.value) {
+        date_notify.setCustomValidity("Should be earlier than the start date.");
+    } else {
+        date_notify.setCustomValidity("");
+        };
+    };
+
+    document.getElementById("id-date_event_start").onchange = validateTimeEvent;
+    document.getElementById("id-date_event_stop").onchange = validateTimeEvent;
+    document.getElementById("id-time_event_start").onchange = validateTimeEvent;
+    document.getElementById("id-time_event_stop").onchange = validateTimeEvent;
+    document.getElementById("id-date_notify").onchange = validateNotifyTimeEvent;
+    </script>
+{% endblock %}

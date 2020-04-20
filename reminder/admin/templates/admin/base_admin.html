@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        {% if title %}
+            <title>Event App - {{ title }}</title>
+        {% else %}
+            <title>Event App</title>
+        {% endif %}
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+        <!-- Custom styles for this template CSS -->
+        <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+
+        {% block head %}
+        {% endblock %}
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+        <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    </head>
+    <body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+        <!-- Navbar content -->
+
+        <a class="navbar-brand col-md-2 mr-0" href="{{ url_for('main_bp.index') }}">Event Calendar</a>
+        <!-- style="max-width: 12rem;" -->
+        <ul class="navbar-nav mr-auto px-3">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main_bp.index')  }}">
+                    <span data-feather="home"></span>
+                    Home
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main_bp.events_list')  }}">
+                    <span data-feather="list"></span>
+                    Event List
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main_bp.about')  }}">
+                    <span data-feather="info"></span>
+                    About
+                </a>
+            </li>
+            {% if current_user.is_authenticated %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main_bp.new_event')  }}">
+                    <span data-feather="plus-square"></span>
+                    New event
+                </a>
+            </li>
+            {% if current_user.is_admin() %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main_bp.admin_portal')  }}">
+                    <span data-feather="settings"></span>
+                    Admin portal
+                </a>
+            </li>
+            {% endif %}
+            {% endif %}
+        </ul>
+        <ul class="navbar-nav px-3">
+            <li class="nav-item text-nowrap">
+                {% if current_user.is_authenticated %}
+                <a class="nav-link" href="{{ url_for('auth_bp.logout') }}">
+                    <span data-feather="log-out"></span>
+                    Logout
+                </a>
+                {% else %}
+                <a class="nav-link" href="{{ url_for('auth_bp.login') }}">
+                    <span data-feather="log-in"></span>
+                    Login
+                </a>
+                {% endif %}
+            </li>
+        </ul>
+
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <!-- style="max-width: 12rem;" -->
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin() %}
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('admin_bp.users')  }}">
+                                <span data-feather="users"></span>
+                                Users <span class="sr-only">(current)</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_bp.new_user')  }}">
+                                <span data-feather="user-plus"></span>
+                                New user
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_bp.events') }}">
+                                <span data-feather="database"></span>
+                                Events
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_bp.notify') }}">
+                                <span data-feather="youtube"></span>
+                                Notification service
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_bp.logs') }}">
+                                <span data-feather="file-text"></span>
+                                Logs
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endif %}
+                    </ul>
+                </div>
+            </nav>
+
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        {% block pagehead %}{% endblock %}
+                    </h1>
+                </div>
+
+                <!-- show flash msgs -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show text-center" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                {% block body %}{% endblock %}
+
+            </main>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/jquery-3.4.1.slim.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    <!-- Icons -->
+    <script src="{{ url_for('static', filename='js/feather.min.js') }}"></script>
+
+    <!-- Icons -->
+    <script>
+            feather.replace()
+        </script>
+    {% block scripts %}
+    {% endblock %}
+    </body>
+</html>

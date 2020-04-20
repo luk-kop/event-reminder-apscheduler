@@ -1,0 +1,91 @@
+{% extends 'base_main.html' %}
+
+{% block pagehead %}
+    List of events
+{% endblock %}
+
+{% block body %}
+    {% for event in events %}
+
+
+    <div class="accordion" id="accordion" role="tablist">
+        <center>
+        <div class="card border-secondary list-group-item-action mb-2 card w-80">
+            <div class="card-header list-group-item-success" role="tab" id="heading{{ event.id }}">
+                <h6 class="mb-0">
+                    <a class="collapsed list-group-item-action" data-toggle="collapse" href="#collapse{{ event.id }}" aria-expanded="true" aria-controls="collapse{{ event.id }}">
+                        <div class="row align-items-center">
+                                <table style="width:100%">
+                                    <tr>
+                                        <td class="font-weight-bolder" width="20%">
+                                            {% if event.all_day_event %}
+                                                {{ event.time_event_start.strftime('%Y-%m-%d') }}
+                                            {% else %}
+                                                {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }}
+                                            {% endif %}
+                                        </td>
+                                        <td width="40%">
+                                            <strong>Title: </strong>{{ event.title }}
+                                        </td>
+                                        <td width="20%">
+                                            <strong>Author: </strong>{{ event.author}}
+                                        </td>
+                                    </tr>
+                                </table>
+                        </div>
+                    </a>
+                </h6>
+            </div>
+
+            <div id="collapse{{ event.id }}" class="collapse" role="tabpanel" aria-labelledby="heading{{ event.id }}">
+                <div class="card-body text-dark text-left">
+                    <div class="card-text mb-3">
+                        <h6>
+                            <table style="width:100%">
+                                <tr>
+                                    <td class="font-weight-bolder pl-5" width="24.5%">
+                                        Event time frame:
+                                    </td>
+                                    <td class="text-muted">
+                                        {% if event.all_day_event %}
+                                            {% if event.time_event_start != event.time_event_stop %}
+                                                {{ event.time_event_start.strftime('%Y-%m-%d') }} - {{ event.time_event_stop.strftime('%Y-%m-%d') }}
+                                            {% else %}
+                                                {{ event.time_event_start.strftime('%Y-%m-%d') }}
+                                            {% endif %}
+                                        {% else %}
+                                        {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }} - {{ event.time_event_stop.strftime('%Y-%m-%d %H:%M') }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bolder align-top pl-5" width="24.5%">
+                                   Details:
+                                    </td>
+                                    <td class="text-muted text-justify align-top">
+                                        {{ event.details }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </h6>
+                    </div>
+                    <div class="row justify-content-md-center">
+                        <div class="col-md-2">
+                            <a href="{{ url_for('main_bp.event', event_id=event.id) }}" class="btn btn-info btn-block">Edit</a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ url_for('main_bp.deactive_event', event_id=event.id) }}" class="btn btn-danger btn-block">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </center>
+    </div>
+
+
+    {% endfor %}
+
+{% endblock body %}
+
+

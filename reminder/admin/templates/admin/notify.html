@@ -1,0 +1,21 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block head %}
+<!-- Switch Button CSS -->
+<link href="{{ url_for('static', filename='css/bootstrap4-toggle.min.css') }}" rel="stylesheet">
+{% endblock head %}
+
+{% block body %}
+
+    <h2>Notification service</h2>
+
+
+<input type="checkbox" data-toggle="toggle" data-onstyle="success" data-offstyle="danger" data-size="sm">
+
+{% endblock body %}
+
+
+{% block scripts %}
+<!-- Switch Button JS -->
+<script src="{{ url_for('static', filename='js/bootstrap4-toggle.min.js') }}"></script>
+{% endblock scripts %}

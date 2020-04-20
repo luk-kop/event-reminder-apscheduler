@@ -1,0 +1,63 @@
+{% extends "admin/base_admin.html" %}
+
+{% block pagehead %}
+    Users
+{% endblock %}
+
+{% block body %}
+
+    <table class="table table-hover">
+        <thead class="thead-light">
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>User ID</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Can log in?</th>
+            <th>Last seen</th>
+            <th></th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            {% if user.is_admin() %}
+            <tr class="alert alert-info">
+            {% else %}
+            <tr>
+            {% endif %}
+
+                <th scope="row">{{ loop.index }}</th>
+                <td>{{ user.username }}</td>
+                <td>{{ user.id }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role|title }}</td>
+                <td>
+                    {% if user.access_granted %}
+                        Yes
+                    {% else %}
+                        No
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user.last_seen %}
+                        {{ user.last_seen.strftime('%Y-%m-%d %H:%M') }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('admin_bp.user', user_id=user.id) }}" class="btn btn-sm btn-block btn-info">Edit</a>
+                </td>
+                <td>
+                    <a href="{{ url_for('admin_bp.del_user', user_id=user.id) }}" class="btn btn-sm btn-block btn-danger">Delete</a>
+
+                </td>
+            </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
