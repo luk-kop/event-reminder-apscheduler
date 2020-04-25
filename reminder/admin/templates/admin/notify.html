@@ -1,21 +1,117 @@
 {% extends 'admin/base_admin.html' %}
+{% set active_page = "notify" %}
 
 {% block head %}
 <!-- Switch Button CSS -->
 <link href="{{ url_for('static', filename='css/bootstrap4-toggle.min.css') }}" rel="stylesheet">
 {% endblock head %}
 
+{% block pagehead %}
+    Notification service
+{% endblock %}
+
 {% block body %}
+<!-- div for mail test -->
+<div id="alerts"></div>
 
-    <h2>Notification service</h2>
+<form action="" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <label for="id-notify_service">Notification configuration</label>
+    <div class="form-row mb-3">
+        <div class="input-group col-md-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Notification service status</span>
+            </div>
+            <input class="form-control" name="notify_status" id="id-notify_service" type="checkbox" data-toggle="toggle" data-onstyle="success" data-offstyle="danger" {{ 'checked' if service_run }}>
+        </div>
+        <div class="input-group col-md-4">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Notification time interval</span>
+            </div>
+            <select class="form-control" id="id-notify_unit" name="notify_unit">
+                <option value="hours" {{ 'selected' if notify_unit == 'hours'}}>hours</option>
+                <option value="minutes" {{ 'selected' if notify_unit == 'minutes'}}>minutes</option>
+                <option value="seconds" {{'selected' if notify_unit == 'seconds'}}>seconds</option>
+            </select>
+            <input class="form-control text-center" type="number" id="id-notify_interval" value={{ notify_interval }} name="notify_interval" min="1" max="120">
+        </div>
+    </div>
+
+    <label for="id-mail_server">Mail configuration</label>
+    <div class="form-row mb-3">
+        <div class="input-group col-md-4">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Mail server</span>
+            </div>
+            <input class="form-control text-center" type="text" id="id-mail_server" name="mail_server" value="{{ mail_server }}" max="50" required>
+        </div>
+        <div class="input-group col-md-2" id="id-date_time_notify">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Server port</span>
+            </div>
+            <input class="form-control text-center" type="text" id="id-mail_port" name="mail_port" value="{{ mail_port }}" max="50" required>
+        </div>
+        <div class="input-group col-md-2">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Use TLS?</span>
+            </div>
+            <select class="form-control" id="id-mail_tls" name="mail_tls">
+                <option value="True" {{ 'selected' if mail_tls }}>Yes</option>
+                <option value="False" {{ 'selected' if not mail_tls }}>No</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row mb-3">
+        <div class="input-group col-md-4">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Mail username</span>
+            </div>
+            <input class="form-control text-center" type="text" id="id-mail_username" name="mail_username" value="{{ mail_username }}" max="50" required>
+        </div>
+
+        <div class="input-group col-md-4">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Username password</span>
+            </div>
+            <input class="form-control text-center" type="password" id="id-mail_password" name="mail_password" placeholder="Mail username password..." max="50">
+        </div>
+    </div>
 
 
-<input type="checkbox" data-toggle="toggle" data-onstyle="success" data-offstyle="danger" data-size="sm">
+    <input class="btn btn-primary" type="submit" value="Submit">
+    <input class="btn btn-warning" type="submit" name="mail-test-btn" id="id-mail-test-btn" onclick="addAlert()" value="Test mail">
+    <!-- <a type="button" class="btn btn-warning" href="{{ url_for('admin_bp.notify', test='mail') }}" ">Test mail</a> -->
+    <input type="submit" class="btn btn-danger" name="cancel-btn" value="Cancel" formnovalidate>
+</form>
 
 {% endblock body %}
-
 
 {% block scripts %}
 <!-- Switch Button JS -->
 <script src="{{ url_for('static', filename='js/bootstrap4-toggle.min.js') }}"></script>
+
+<script type='text/javascript'>
+function addAlert() {
+    $('#alerts').append(
+        '<div class="alert alert-warning alert-dismissible fade show text-center" role="alert">' +
+                    'The mail service testing in progress...' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span>' +
+                    '</button>' +
+                '</div>');
+
+}
+</script>
+
+<!--
+<div class="alert alert-warning alert-dismissible fade show text-center" role="alert">
+                    The mail service testing in progress...'
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+-->
+
 {% endblock scripts %}

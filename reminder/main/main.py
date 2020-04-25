@@ -67,12 +67,41 @@ def events_list():
     """
     Display all events in list format.
     """
-    today = datetime.date.today()
-    # Show only active events:
-    # events = Event.query.filter(Event.time_event_start >= today).order_by("time_event_start").all()
-    events = Event.query.filter(and_(or_(Event.time_event_start >= today,
-                                    Event.time_event_stop >= today)),Event.is_active == True).order_by("time_event_start").all()
-    return render_template('events_list.html', events=events, title='List')
+    today = datetime.datetime.today()
+
+    # Fetch all current event's authors from db.
+    # author_ids = set([_.author_uid for _ in Event.query.all()])
+    author_ids = set([_.author_uid for _ in Event.query.filter(and_(or_(Event.time_event_start >= today,
+                                                                        Event.time_event_stop >= today)),
+                                                               Event.is_active == True, ).all()])
+    users = User.query.filter(User.role_id == 2).order_by(func.lower(User.username).asc()).all()
+    # Check whether user is author (prepare list of authors)
+    event_authors = [user for user in users if user.id in author_ids]
+    try:
+        if not request.args or request.args.get('list') == 'current':
+            # Show only active events:
+            events = Event.query.filter(and_(or_(Event.time_event_start >= today,
+                                                 Event.time_event_stop >= today)),
+                                        Event.is_active == True).order_by("time_event_start").all()
+        elif request.args.get('list') == 'own':
+            # Show only current user events.
+            events = Event.query.filter(and_(or_(Event.time_event_start >= today,
+                                                 Event.time_event_stop >= today)),
+                                        Event.is_active == True, Event.author == current_user)\
+                .order_by("time_event_start").all()
+        elif request.args.get('list') == 'all':
+            # Show ALL events (current and old events)
+            events = Event.query.filter(Event.is_active == True).order_by("time_event_start").all()
+        elif int(request.args.get('list')) in author_ids:
+            # Show current events by user.
+            events = Event.query.filter(and_(or_(Event.time_event_start >= today, Event.time_event_stop >= today)),
+                                        Event.is_active == True,
+                                        Event.author_uid == request.args.get('list')).order_by("time_event_start").all()
+        else:
+            abort(404)
+    except ValueError:
+        abort(404)
+    return render_template('events_list.html', events=events, title='List', today=today, event_authors=event_authors)
 
 
 @main_bp.route('/api/events')

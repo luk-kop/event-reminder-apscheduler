@@ -64,7 +64,6 @@ class User(db.Model, UserMixin):
         self.last_seen = datetime.utcnow()
 
 
-
 class AnonymousUser(AnonymousUserMixin):
     def is_admin(self):
         return False
@@ -92,4 +91,11 @@ class Event(db.Model):
     # notified_uids
 
     def __repr__(self):
-        return f'Event {self.title} on {self.time_event}'
+        return f'Event {self.title}'
+
+
+class Notification(db.Model):
+    """Notification service config."""
+    id = db.Column(db.Integer, primary_key=True)
+    notify_unit = db.Column(db.String(10), unique=True)
+    notify_interval = db.Column(db.Integer)

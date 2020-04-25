@@ -1,37 +1,51 @@
 {% extends 'base_main.html' %}
 
 {% block pagehead %}
-    List of events
+List of events
 {% endblock %}
 
 {% block body %}
-    {% for event in events %}
-
-
-    <div class="accordion" id="accordion" role="tablist">
-        <center>
-        <div class="card border-secondary list-group-item-action mb-2 card w-80">
-            <div class="card-header list-group-item-success" role="tab" id="heading{{ event.id }}">
+<nav class="nav nav-pills nav-fill mb-3" id="id-nav_bar">
+    <a class="nav-item nav-link {{ 'active' if request.args.get('list') == 'current' }}" href="{{ url_for('main_bp.events_list', list='current') }}">Current events</a>
+    {% if current_user.is_authenticated %}
+    <a class="nav-item nav-link {{ 'active' if request.args.get('list') == 'own' }}" href="{{ url_for('main_bp.events_list', list='own') }}">Own current events</a>
+    {% endif %}
+    <a class="nav-item nav-link {{ 'active' if request.args.get('list') == 'all' }}" href="{{ url_for('main_bp.events_list', list='all') }}">All events</a>
+    <div class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle {{ 'active' if request.args.get('list') not in ['current', 'own', 'all'] }}" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Events by user</a>
+        <div class="dropdown-menu active">
+            {% for author in event_authors %}
+            <a class="dropdown-item" href="{{ url_for('main_bp.events_list', list=author.id) }}">{{ author.username }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</nav>
+{% for event in events %}
+<div class="accordion" id="accordion" role="tablist">
+    <center>
+        <div class="card border-secondary mb-2 card w-80">
+            <!-- <div class="card-header list-group-item-success" role="tab" id="heading{{ event.id }}"> -->
+            <div class="card-header list-group-item-action list-group-item-{{ 'success' if event.time_event_start >= today or event.time_event_stop >= today else 'danger' }}" role="tab" id="heading{{ event.id }}">
                 <h6 class="mb-0">
                     <a class="collapsed list-group-item-action" data-toggle="collapse" href="#collapse{{ event.id }}" aria-expanded="true" aria-controls="collapse{{ event.id }}">
                         <div class="row align-items-center">
-                                <table style="width:100%">
-                                    <tr>
-                                        <td class="font-weight-bolder" width="20%">
-                                            {% if event.all_day_event %}
-                                                {{ event.time_event_start.strftime('%Y-%m-%d') }}
-                                            {% else %}
-                                                {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }}
-                                            {% endif %}
-                                        </td>
-                                        <td width="40%">
-                                            <strong>Title: </strong>{{ event.title }}
-                                        </td>
-                                        <td width="20%">
-                                            <strong>Author: </strong>{{ event.author}}
-                                        </td>
-                                    </tr>
-                                </table>
+                            <table style="width:100%">
+                                <tr>
+                                    <td class="font-weight-bolder" width="20%">
+                                        {% if event.all_day_event %}
+                                        {{ event.time_event_start.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                        {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }}
+                                        {% endif %}
+                                    </td>
+                                    <td width="40%">
+                                        <strong>Title: </strong>{{ event.title }}
+                                    </td>
+                                    <td width="20%">
+                                        <strong>Author: </strong>{{ event.author}}
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                     </a>
                 </h6>
@@ -48,11 +62,11 @@
                                     </td>
                                     <td class="text-muted">
                                         {% if event.all_day_event %}
-                                            {% if event.time_event_start != event.time_event_stop %}
-                                                {{ event.time_event_start.strftime('%Y-%m-%d') }} - {{ event.time_event_stop.strftime('%Y-%m-%d') }}
-                                            {% else %}
-                                                {{ event.time_event_start.strftime('%Y-%m-%d') }}
-                                            {% endif %}
+                                        {% if event.time_event_start != event.time_event_stop %}
+                                        {{ event.time_event_start.strftime('%Y-%m-%d') }} - {{ event.time_event_stop.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                        {{ event.time_event_start.strftime('%Y-%m-%d') }}
+                                        {% endif %}
                                         {% else %}
                                         {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }} - {{ event.time_event_stop.strftime('%Y-%m-%d %H:%M') }}
                                         {% endif %}
@@ -60,7 +74,7 @@
                                 </tr>
                                 <tr>
                                     <td class="font-weight-bolder align-top pl-5" width="24.5%">
-                                   Details:
+                                        Details:
                                     </td>
                                     <td class="text-muted text-justify align-top">
                                         {{ event.details }}
@@ -80,12 +94,11 @@
                 </div>
             </div>
         </div>
-            </center>
-    </div>
+    </center>
+</div>
 
 
-    {% endfor %}
+{% endfor %}
 
 {% endblock body %}
-
 

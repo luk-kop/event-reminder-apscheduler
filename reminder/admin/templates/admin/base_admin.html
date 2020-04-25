@@ -82,6 +82,15 @@
 
     </nav>
 
+    {% set navigation_bar = [
+    ('admin_bp.users', 'users', 'users', 'Users'),
+    ('admin_bp.new_user', 'new_user', 'user-plus', 'New user'),
+    ('admin_bp.events', 'events', 'database', 'Events'),
+    ('admin_bp.notify', 'notify', 'youtube', 'Notification service'),
+    ('admin_bp.logs', 'logs', 'file-text', 'Logs'),
+    ] -%}
+    {% set active_page = active_page|default('users') -%}
+
     <div class="container-fluid">
         <div class="row">
             <nav class="col-md-2 d-none d-md-block bg-light sidebar">
@@ -90,12 +99,15 @@
                     <ul class="nav flex-column">
                         {% if current_user.is_authenticated %}
                         {% if current_user.is_admin() %}
+                        {% for href, id, icon, caption in navigation_bar %}
                         <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('admin_bp.users')  }}">
-                                <span data-feather="users"></span>
-                                Users <span class="sr-only">(current)</span>
+                            <a class="nav-link {{ 'active' if id == active_page }}" href="{{ url_for(href|e)  }}">
+                                <span data-feather="{{ icon|e }}"></span>
+                                {{ caption|e }} <span class="sr-only">(current)</span>
                             </a>
                         </li>
+                        {% endfor %}
+                        <!--
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('admin_bp.new_user')  }}">
                                 <span data-feather="user-plus"></span>
@@ -119,7 +131,7 @@
                                 <span data-feather="file-text"></span>
                                 Logs
                             </a>
-                        </li>
+                        </li>-->
                         {% endif %}
                         {% endif %}
                     </ul>
@@ -132,7 +144,6 @@
                         {% block pagehead %}{% endblock %}
                     </h1>
                 </div>
-
                 <!-- show flash msgs -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}

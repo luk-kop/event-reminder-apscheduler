@@ -1,0 +1,26 @@
+Dear {{ recipient.username }},
+
+{% if event.all_day_event %}
+We remind you of the event on {{ event.time_event_start.strftime('%Y-%m-%d') }}.
+{% else %}
+We remind you of the event on {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }}.
+{% endif %}
+
+Event title:        {{ event.title }}
+
+Event time frame:   {% if event.all_day_event %}
+        {% if event.time_event_start != event.time_event_stop %}
+        {{ event.time_event_start.strftime('%Y-%m-%d') }} - {{ event.time_event_stop.strftime('%Y-%m-%d') }}
+        {% else %}
+        {{ event.time_event_start.strftime('%Y-%m-%d') }}
+        {% endif %}
+        {% else %}
+        {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }} - {{ event.time_event_stop.strftime('%Y-%m-%d %H:%M') }}
+        {% endif %}
+
+Event's details:
+{{ event.details }}
+
+Regards,
+
+The reminder app

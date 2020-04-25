@@ -1,0 +1,43 @@
+<p>Dear {{ recipient.username }},</p>
+
+
+<p>
+    {% if event.all_day_event %}
+    We remind you of the event on <strong>{{ event.time_event_start.strftime('%Y-%m-%d') }}</strong>.
+    {% else %}
+    We remind you of the event on <strong>{{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }}</strong>.
+    {% endif %}
+</p>
+<table>
+    <tr valign="top">
+        <td>
+            <strong>Event title:</strong>
+        </td>
+        <td>
+            {{ event.title }}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <strong>Event time frame:</strong>
+        </td>
+        <td>
+            {% if event.all_day_event %}
+            {% if event.time_event_start != event.time_event_stop %}
+            {{ event.time_event_start.strftime('%Y-%m-%d') }} - {{ event.time_event_stop.strftime('%Y-%m-%d') }}
+            {% else %}
+            {{ event.time_event_start.strftime('%Y-%m-%d') }}
+            {% endif %}
+            {% else %}
+            {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }} - {{ event.time_event_stop.strftime('%Y-%m-%d %H:%M') }}
+            {% endif %}
+        </td>
+    </tr>
+</table>
+<p>
+    <strong>Event's details:</strong><br/>
+    {{ event.details }}
+</p>
+
+<p>Regards,</p>
+<p>The <code>reminder app</code></p>

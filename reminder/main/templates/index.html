@@ -1,5 +1,7 @@
 {% extends 'base_main.html' %}
 {% block head %}
+{% set active_page = "index" %}
+
     <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel='stylesheet'>
 
     <link href="{{ url_for('static', filename='fullcalendar/core/main.css') }}" rel="stylesheet">

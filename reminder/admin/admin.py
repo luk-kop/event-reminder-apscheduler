@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
-from reminder import db, scheduler
-from reminder.models import Role, User, Event
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app
+from reminder import db, scheduler, mail
+from reminder.models import Role, User, Event, Notification
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from functools import wraps
 from sqlalchemy import func, or_
 import datetime
+from flask_mail import Message, Connection
 from reminder.main import main
 
 
@@ -29,7 +30,57 @@ def background_job():
     """
     Run process in background.
     """
-    print('test')
+    # get the app object
+    app = scheduler.app
+    with app.app_context():     #get the db object and use it
+        today = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+        print(today)
+        print(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'], current_app.config['MAIL_USERNAME'])
+        current_app.config['MAIL_SERVER'] = 'dupa'
+        events_to_notify = Event.query.filter(Event.time_notify < today,
+                                              Event.is_active == True,
+                                              Event.to_notify == True,
+                                              Event.notification_sent == False).all()
+        for no, event in enumerate(events_to_notify, 1):
+            print(f'{no}: {event}, {event.time_notify}, {event.notification_sent}')
+
+        for event in events_to_notify:
+            users_to_notify = [user for user in event.notified_uids]
+            print(f'{event}, {event.time_notify}, {event.notification_sent} {users_to_notify}', )
+            send_email('Attention! Upcoming event!',
+                       users_to_notify,
+                       event)
+            print(F'Mail sent to {users_to_notify}')
+            event.notification_sent = True
+            db.session.commit()
+
+
+def send_test_email():
+    """
+    Send email for SMTP server testing purposes.
+    Test mail is sent using the account declared in MAIL_USERNAME env var.
+    Recipient is also user from MAIL_USERNAME env var.
+    """
+    print(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'], current_app.config['MAIL_USERNAME'])
+    msg = Message('Reminder App',
+                  recipients=[current_app.config['MAIL_USERNAME']])
+    msg.body = "Testing mail service."
+    msg.html = "<bTesting mail service.</b>"
+    mail.send(msg)
+    flash('The mail service is configured correctly!', 'success')
+
+
+def send_email(subject, recipients, event):
+    """
+    Send email to users.
+    """
+    with mail.connect() as conn:
+        for recipient in recipients:
+            msg = Message(subject=subject,
+                          recipients=[recipient.email])
+            msg.body = render_template("admin/email.txt", recipient=recipient, event=event)
+            msg.html = render_template("admin/email.html", recipient=recipient, event=event)
+            conn.send(msg)
 
 
 @admin_bp.before_request
@@ -103,8 +154,6 @@ def event(event_id):
         flash('Your changes have been saved!', 'success')
         return redirect(url_for('admin_bp.events'))
     return render_template('admin/event.html', event=event, title='Event details', users=users_to_notify, today=today)
-
-
 
 
 @admin_bp.route('/users')
@@ -266,32 +315,90 @@ def act_event(event_id):
     return redirect(url_for('admin_bp.events'))
 
 
-@admin_bp.route('/notify/')
+@admin_bp.route('/notify/', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def notify():
-    test = ''
-    if test == 'start':
-        scheduler.print_jobs()
-        # check weather some scheduler jobs exist
-        if not scheduler.get_jobs():
-            print('brak jobs!!!')
-        scheduler.add_job(background_job, trigger='interval', seconds=3, replace_existing=True, max_instances=1, id='my_job_id')
-        if scheduler.running:
-            print('is running')
-        flash('The notify service is running!', 'success')
-    elif test == 1:
-        print('test test')
-        scheduler.print_jobs()
-        print(scheduler.get_jobs())
-        if scheduler.get_jobs():
-            print('jest job')
-        scheduler.remove_job('my_job_id')
-        # scheduler.shutdown(wait=True)
-        if not scheduler.running:
-            print('NOT running')
-        flash('The notify service has been turned off!', 'success')
-    return render_template('admin/notify.html')
+    # service_run = True if scheduler.get_jobs() else False
+
+    # Notification config data (for interval and interval unit).
+    notification_config = Notification.query.first()
+    # Mail config data.
+    notify_config = {
+        'mail_server': current_app.config['MAIL_SERVER'],
+        'mail_port': current_app.config['MAIL_PORT'],
+        'mail_tls': current_app.config['MAIL_USE_TLS'],
+        'mail_username': current_app.config['MAIL_USERNAME'],
+        'notify_unit': notification_config.notify_unit,
+        'notify_interval': notification_config.notify_interval,
+    }
+
+    if request.method == "POST":
+        # If a "Cancel" button has been pressed.
+        if request.form.get('cancel-btn') == 'Cancel':
+            return redirect(url_for('admin_bp.users'))
+
+        # Fetch data from form.
+        notify_status_form = request.form.get('notify_status')
+        notify_unit_form = request.form.get('notify_unit')
+        notify_interval_form = request.form.get('notify_interval')
+        mail_server_form = request.form.get('mail_server')
+        mail_port_form = request.form.get('mail_port')
+        mail_tls_form = request.form.get('mail_tls')
+        mail_username_form = request.form.get('mail_username')
+        mail_password_form = request.form.get('mail_password')
+
+        # Update the data in 'notify_config' div and config object (if required).
+        if mail_server_form != notify_config['mail_server']:
+            current_app.config['MAIL_SERVER'] = mail_server_form
+            notify_config['mail_server'] = mail_server_form
+        if mail_port_form != notify_config['mail_port']:
+            current_app.config['MAIL_PORT'] = mail_port_form
+            notify_config['mail_port'] = mail_port_form
+        if mail_tls_form != notify_config['mail_tls']:
+            current_app.config['MAIL_USE_TLS'] = mail_tls_form
+            notify_config['mail_tls'] = mail_tls_form
+        if mail_username_form != notify_config['mail_username']:
+            current_app.config['MAIL_USERNAME'] = mail_username_form
+            notify_config['mail_username'] = mail_username_form
+        if not mail_password_form:
+            current_app.config['MAIL_PASSWORD'] = mail_password_form
+
+        # Test mail SERVER configuration
+        if request.form.get('mail-test-btn'):
+            # flash('The mail service testing in progress...', 'warning')
+            send_test_email()
+        else:
+            # check weather some scheduler jobs exist
+            # if scheduler.running:
+            # print(scheduler.get_jobs())
+            if not notify_status_form and scheduler.get_jobs():
+                scheduler.remove_job('my_job_id')
+                flash('The notify service has been turned off!', 'success')
+            elif notify_status_form == 'on':
+                if notify_unit_form == 'seconds':
+                    scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
+                                      seconds=int(notify_interval_form), id='my_job_id')
+                elif notify_unit_form == 'minutes':
+                    scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
+                                      minutes=int(notify_interval_form), id='my_job_id')
+                else:
+                    scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
+                                      hours=int(notify_interval_form), id='my_job_id')
+                flash('The notify service is running!', 'success')
+
+        # Update the rest of the data in 'notify_config' dic.
+        notify_config['notify_unit'] = notify_unit_form
+        notify_config['notify_interval'] = notify_interval_form
+
+        # Save notification settings to db.
+        if notify_unit_form != notify_config['notify_unit'] or notify_interval_form != notify_config['notify_interval']:
+            notification_config.notify_unit = notify_unit_form
+            notification_config.notify_interval = int(notify_interval_form)
+            db.session.commit()
+
+    service_run = True if scheduler.get_jobs() else False
+    return render_template('admin/notify.html', service_run=service_run, **notify_config)
 
 
 @admin_bp.route('/logs')
@@ -301,4 +408,5 @@ def logs():
     """
     List logs.
     """
-    return 'logs test'
+    pass
+    return render_template('admin/logs.html')

@@ -75,13 +75,28 @@ class Event(Base):
     is_active = Column(Boolean, default=True)
 
 
+class Notification(Base):
+    """Notification service config."""
+    __tablename__ = 'notification'
+    id = Column(Integer, primary_key=True)
+    notify_unit = Column(String(10), unique=True)
+    notify_interval = Column(Integer)
+
+
 if __name__ == '__main__':
 
-    db_name = 'test.db'
+    db_name = input('\nEnter name for DB [app.db]:')
+    if not db_name:
+        db_name = 'app.db'
 
     if os.path.exists(db_name):
-        print(f'\nRemoving an existing db - "{db_name}"...')
-        os.remove(db_name)
+        query = input(f'\nDB "{db_name} "already exist. Shall I remove it [yes]?')
+        if query.strip().lower() in ['', 'yes']:
+            print(f'\nRemoving an existing DB - "{db_name}"...')
+            os.remove(db_name)
+        else:
+            print('\nExiting script!')
+            quit()
 
     engine = create_engine(f'sqlite:///{db_name}')
     # generate database schema
@@ -97,6 +112,12 @@ if __name__ == '__main__':
 
     session.bulk_save_objects(roles)
 
+    notification_config = [
+        Notification(notify_unit='hours', notify_interval=1),
+    ]
+
+    session.bulk_save_objects(notification_config)
+
     print("\nEnter credentials for user with admin privileges:")
     admin_username = input('> username: ')
     admin_passwd = input('> password: ')
@@ -107,32 +128,32 @@ if __name__ == '__main__':
     print('\nAdding dummy users data to db...')
     users = [
         User(username=f'{admin_username}',
-             email=f'{admin_username}@example.com',
+             email=f'{admin_username}@niepodam.pl',
              password_hash=generate_password_hash(f'{admin_passwd}'),
              access_granted=True,
              role_id=1),
         User(username='john_doe',
-             email='john.doe@example.com',
+             email='john.doe@niepodam.pl',
              password_hash=generate_password_hash(f'{user_passwd}'),
              access_granted=True,
              role_id=2),
         User(username='marry',
-             email='marry@example.com',
+             email='marry@niepodam.pl',
              password_hash=generate_password_hash(f'{user_passwd}'),
              access_granted=True,
              role_id=2),
         User(username='test_user',
-             email='test.user@example.com',
+             email='test.user@niepodam.pl',
              password_hash=generate_password_hash(f'{user_passwd}'),
              access_granted=True,
              role_id=2),
         User(username='harry',
-             email='harry@example.com',
+             email='harry@niepodam.pl',
              password_hash=generate_password_hash(f'{user_passwd}'),
              access_granted=False,
              role_id=2),
         User(username='ponton',
-             email='ponton@example.com',
+             email='ponton@niepodam.pl',
              password_hash=generate_password_hash(f'{user_passwd}'),
              access_granted=True,
              role_id=2),
@@ -141,6 +162,7 @@ if __name__ == '__main__':
     session.bulk_save_objects(users)
 
     today = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    today_with_minutes = datetime.utcnow().replace(second=0, microsecond=0)
 
     # Add some dummy data (events)
     print('\nAdding dummy data events to db...')
@@ -201,6 +223,7 @@ if __name__ == '__main__':
               to_notify=False,
               time_notify=None,
               author_uid=random_user_id(),
+              notification_sent=True
               ),
         Event(title='Neque porro quisquam',
               details='Quisque facilisis venenatis nulla vulputate dictum. Cras aliquam sem sapien. Nam lobortis, '
@@ -286,6 +309,7 @@ if __name__ == '__main__':
               to_notify=False,
               time_notify=None,
               author_uid=random_user_id(),
+              notification_sent=True
               ),
         Event(title='CCNA CyberOPS Exam',
               details='Quisque vitae sapien imperdiet, porttitor leo ut, auctor nulla. Pellentesque eget ipsum '
@@ -330,7 +354,7 @@ if __name__ == '__main__':
               time_event_start=today + timedelta(days=14),
               time_event_stop=today + timedelta(days=14),
               to_notify=True,
-              time_notify=today - timedelta(days=12, hours=4),
+              time_notify=today + timedelta(days=12, hours=4),
               author_uid=random_user_id(),
               ),
         Event(title='Sekurak Hacking Party',
@@ -345,6 +369,36 @@ if __name__ == '__main__':
               time_notify=today - timedelta(days=11, hours=4),
               author_uid=random_user_id(),
               ),
+        Event(title='Water grandma\'s flowers',
+              details='Maecenas tempor leo dui, id posuere libero maximus at.',
+              time_creation=today - timedelta(days=2, hours=2),
+              all_day_event=False,
+              time_event_start=today + timedelta(hours=3),
+              time_event_stop=today + timedelta(hours=5),
+              to_notify=True,
+              time_notify=today_with_minutes - timedelta(hours=1),
+              author_uid=random_user_id(),
+              ),
+        Event(title='Take the neighbor\'s dog for a walk',
+              details='Nulla ut suscipit felis. Etiam euismod pellentesque lorem ac finibus.',
+              time_creation=today - timedelta(days=1, hours=2),
+              all_day_event=False,
+              time_event_start=today + timedelta(hours=14),
+              time_event_stop=today + timedelta(hours=15),
+              to_notify=True,
+              time_notify=today_with_minutes + timedelta(minutes=3),
+              author_uid=random_user_id(),
+              ),
+        Event(title='Purchase materials for home improvement',
+              details='Vestibulum nulla enim, tincidunt id fringilla commodo, malesuada ut tellus.',
+              time_creation=today - timedelta(hours=2),
+              all_day_event=False,
+              time_event_start=today + timedelta(days=5),
+              time_event_stop=today + timedelta(days=5, hours=2),
+              to_notify=True,
+              time_notify=today_with_minutes + timedelta(minutes=6),
+              author_uid=random_user_id(),
+              ),
     ]
 
     session.bulk_save_objects(events)
@@ -354,7 +408,8 @@ if __name__ == '__main__':
 
     # Assign the event to a user (users) who should be notified (choose by random).
     for event in session.query(Event).filter(Event.to_notify == True).all():
-        for user in random.sample(users_ids, k=random.randint(1, len(users_ids) if len(users_ids) <= 4 else 5)):
+        # No more than 3 users to to be notified.
+        for user in random.sample(users_ids, k=random.randint(1, 3)):
             event.notified_uids.append(user)
 
     session.commit()

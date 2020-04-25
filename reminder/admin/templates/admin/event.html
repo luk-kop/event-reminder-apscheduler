@@ -1,4 +1,5 @@
 {% extends 'admin/base_admin.html' %}
+{% set active_page = "events" %}
 
 {% block pagehead %}
     Edit Event
@@ -13,13 +14,13 @@
 </ul>
 -->
 <div class="form-row">
-        <div class="input-group col-md-3 mb-3" id="id-date_time_event_start">
+        <div class="input-group col-md-3 mb-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Date of creation</span>
             </div>
             <p class="form-control">{{ event.time_creation.strftime('%Y-%m-%d %H:%M') }}</p>
         </div>
-        <div class="input-group col-md-3 mb-3" id="id-date_time_event_start">
+        <div class="input-group col-md-3 mb-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Author</span>
             </div>
