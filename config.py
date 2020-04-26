@@ -1,7 +1,5 @@
 import os
 
-# basedir = os.path.abspath(os.path.dirname(__file__))
-
 
 class Config:
     """
@@ -15,7 +13,6 @@ class Config:
 
     # Database Config
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
-    #    'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Custom Config
@@ -24,9 +21,7 @@ class Config:
     # Email config
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = os.environ.get('MAIL_PORT')
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
+    MAIL_SECURITY = 'tls'
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    # MAIL_DEBUG = False
-    # ADMINS = ['janek.exo@wp.pl']

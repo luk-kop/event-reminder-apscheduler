@@ -70,36 +70,32 @@ def events_list():
     today = datetime.datetime.today()
 
     # Fetch all current event's authors from db.
-    # author_ids = set([_.author_uid for _ in Event.query.all()])
     author_ids = set([_.author_uid for _ in Event.query.filter(and_(or_(Event.time_event_start >= today,
                                                                         Event.time_event_stop >= today)),
                                                                Event.is_active == True, ).all()])
     users = User.query.filter(User.role_id == 2).order_by(func.lower(User.username).asc()).all()
     # Check whether user is author (prepare list of authors)
     event_authors = [user for user in users if user.id in author_ids]
-    try:
-        if not request.args or request.args.get('list') == 'current':
-            # Show only active events:
-            events = Event.query.filter(and_(or_(Event.time_event_start >= today,
-                                                 Event.time_event_stop >= today)),
-                                        Event.is_active == True).order_by("time_event_start").all()
-        elif request.args.get('list') == 'own':
-            # Show only current user events.
-            events = Event.query.filter(and_(or_(Event.time_event_start >= today,
-                                                 Event.time_event_stop >= today)),
-                                        Event.is_active == True, Event.author == current_user)\
-                .order_by("time_event_start").all()
-        elif request.args.get('list') == 'all':
-            # Show ALL events (current and old events)
-            events = Event.query.filter(Event.is_active == True).order_by("time_event_start").all()
-        elif int(request.args.get('list')) in author_ids:
-            # Show current events by user.
-            events = Event.query.filter(and_(or_(Event.time_event_start >= today, Event.time_event_stop >= today)),
-                                        Event.is_active == True,
-                                        Event.author_uid == request.args.get('list')).order_by("time_event_start").all()
-        else:
-            abort(404)
-    except ValueError:
+    if not request.args or request.args.get('list') == 'current':
+        # Show only active events:
+        events = Event.query.filter(and_(or_(Event.time_event_start >= today,
+                                             Event.time_event_stop >= today)),
+                                    Event.is_active == True).order_by("time_event_start").all()
+    elif request.args.get('list') == 'own':
+        # Show only current user events.
+        events = Event.query.filter(and_(or_(Event.time_event_start >= today,
+                                             Event.time_event_stop >= today)),
+                                    Event.is_active == True, Event.author == current_user)\
+            .order_by("time_event_start").all()
+    elif request.args.get('list') == 'all':
+        # Show ALL events (current and old events)
+        events = Event.query.filter(Event.is_active == True).order_by("time_event_start").all()
+    elif request.args.get('list') == 'author' and int(request.args.get('id')) in author_ids:
+        # Show current events by user.
+        events = Event.query.filter(and_(or_(Event.time_event_start >= today, Event.time_event_stop >= today)),
+                                    Event.is_active == True,
+                                    Event.author_uid == request.args.get('id')).order_by("time_event_start").all()
+    else:
         abort(404)
     return render_template('events_list.html', events=events, title='List', today=today, event_authors=event_authors)
 
@@ -166,7 +162,8 @@ def new_event():
         if request.form.get('cancel-btn') == 'Cancel':
             return redirect(url_for('main_bp.index'))
         to_notify_db = True if request.form.get('to_notify') == 'True' else False
-        time_notify_db = str_to_datetime(request.form.get('date_notify')) if request.form.get('date_notify') else None
+        time_notify_db = str_to_datetime(request.form.get('date_notify'), request.form.get('time_notify')) \
+            if request.form.get('date_notify') else None
         # Check if all day event or not.
         if request.form.get('time_event_start'):
             time_event_start_db = str_to_datetime(request.form.get('date_event_start'),
@@ -220,7 +217,8 @@ def event(event_id):
         event.details = request.form.get('details')
 
         event.to_notify = True if request.form.get('to_notify') == 'True' else False
-        event.time_notify = str_to_datetime(request.form.get('date_notify')) if request.form.get('date_notify') else None
+        event.time_notify = str_to_datetime(request.form.get('date_notify'), request.form.get('time_notify')) \
+            if request.form.get('date_notify') else None
         event.all_day_event = True if request.form.get('allday') == 'True' else False
 
         # Check if all day event or not.

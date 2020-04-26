@@ -1,12 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app
-from reminder import db, scheduler, mail
+from reminder import db, scheduler
 from reminder.models import Role, User, Event, Notification
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from functools import wraps
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, desc, asc
 import datetime
-from flask_mail import Message, Connection
 from reminder.main import main
+from reminder.admin import smtp_mail
 
 
 admin_bp = Blueprint('admin_bp', __name__,
@@ -32,55 +32,27 @@ def background_job():
     """
     # get the app object
     app = scheduler.app
-    with app.app_context():     #get the db object and use it
+    with app.app_context():
         today = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
-        print(today)
-        print(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'], current_app.config['MAIL_USERNAME'])
-        current_app.config['MAIL_SERVER'] = 'dupa'
-        events_to_notify = Event.query.filter(Event.time_notify < today,
+        print(today)    # only for tests
+        events_to_notify = Event.query.filter(Event.time_notify <= today,
                                               Event.is_active == True,
                                               Event.to_notify == True,
                                               Event.notification_sent == False).all()
-        for no, event in enumerate(events_to_notify, 1):
-            print(f'{no}: {event}, {event.time_notify}, {event.notification_sent}')
-
-        for event in events_to_notify:
-            users_to_notify = [user for user in event.notified_uids]
-            print(f'{event}, {event.time_notify}, {event.notification_sent} {users_to_notify}', )
-            send_email('Attention! Upcoming event!',
-                       users_to_notify,
-                       event)
-            print(F'Mail sent to {users_to_notify}')
-            event.notification_sent = True
-            db.session.commit()
-
-
-def send_test_email():
-    """
-    Send email for SMTP server testing purposes.
-    Test mail is sent using the account declared in MAIL_USERNAME env var.
-    Recipient is also user from MAIL_USERNAME env var.
-    """
-    print(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'], current_app.config['MAIL_USERNAME'])
-    msg = Message('Reminder App',
-                  recipients=[current_app.config['MAIL_USERNAME']])
-    msg.body = "Testing mail service."
-    msg.html = "<bTesting mail service.</b>"
-    mail.send(msg)
-    flash('The mail service is configured correctly!', 'success')
-
-
-def send_email(subject, recipients, event):
-    """
-    Send email to users.
-    """
-    with mail.connect() as conn:
-        for recipient in recipients:
-            msg = Message(subject=subject,
-                          recipients=[recipient.email])
-            msg.body = render_template("admin/email.txt", recipient=recipient, event=event)
-            msg.html = render_template("admin/email.html", recipient=recipient, event=event)
-            conn.send(msg)
+        try:
+            for event in events_to_notify:
+                users_to_notify = [user for user in event.notified_uids]
+                print(f'{event}, {event.time_notify}, {event.notification_sent} {users_to_notify}', )
+                smtp_mail.send_email('Attention! Upcoming event!',
+                           users_to_notify,
+                           event)
+                print(f'Mail sent to {users_to_notify}')
+                event.notification_sent = True
+                db.session.commit()
+        except Exception as error:
+            print(error)
+            # Remove job when error occure.
+            scheduler.remove_job('my_job_id')
 
 
 @admin_bp.before_request
@@ -90,7 +62,7 @@ def update_last_seen():
     """
     #print(scheduler.running)
     if request.method == "POST":    # only for tests
-        print(request.form)
+        print(f'\n{request.form}\n')
     if current_user.is_authenticated:
         current_user.user_seen()
         db.session.commit()
@@ -103,8 +75,34 @@ def events():
     """
     Display all events from db in Admin Portal.
     """
-    # print(request.referrer) # print previous URL
-    events = Event.query.order_by("time_event_start").all()
+    if not request.args or (request.args.get('col') == 'start' and request.args.get('dir') == 'asc'):
+        events = Event.query.order_by("time_event_start").all()
+    elif request.args.get('col') == 'id' and request.args.get('dir') == 'desc':
+        events = Event.query.order_by(desc(Event.id)).all()
+    elif request.args.get('col') == 'id' and request.args.get('dir') == 'asc':
+        events = Event.query.order_by(asc(Event.id)).all()
+    elif request.args.get('col') == 'start' and request.args.get('dir') == 'desc':
+        events = Event.query.order_by(desc(Event.time_event_start)).all()
+    elif request.args.get('col') == 'id' and request.args.get('dir') == 'asc':
+        events = Event.query.order_by(asc(Event.time_event_start)).all()
+    elif request.args.get('col') == 'stop' and request.args.get('dir') == 'desc':
+        events = Event.query.order_by(desc(Event.time_event_stop)).all()
+    elif request.args.get('col') == 'stop' and request.args.get('dir') == 'asc':
+        events = Event.query.order_by(asc(Event.time_event_stop)).all()
+    elif request.args.get('col') == 'title' and request.args.get('dir') == 'asc':
+        events = Event.query.order_by(func.lower(Event.title).asc()).all()
+    elif request.args.get('col') == 'title' and request.args.get('dir') == 'desc':
+        events = Event.query.order_by(func.lower(Event.title).desc()).all()
+    elif request.args.get('col') == 'notify' and request.args.get('dir') == 'yes':
+        events = Event.query.filter(Event.to_notify == True).all() + Event.query.filter(Event.to_notify == False).all()
+    elif request.args.get('col') == 'notify' and request.args.get('dir') == 'no':
+        events = Event.query.filter(Event.to_notify == False).all() + Event.query.filter(Event.to_notify == True).all()
+    elif request.args.get('col') == 'active' and request.args.get('dir') == 'no':
+        events = Event.query.filter(Event.is_active == False).all() + Event.query.filter(Event.is_active == True).all()
+    elif request.args.get('col') == 'active' and request.args.get('dir') == 'yes':
+        events = Event.query.filter(Event.is_active == True).all() + Event.query.filter(Event.is_active == False).all()
+    else:
+        abort(404)
     return render_template('admin/events.html', events=events, title='Events')
 
 
@@ -130,11 +128,14 @@ def event(event_id):
         event.details = request.form.get('details')
         event.all_day_event = True if request.form.get('allday') == 'True' else False
         event.to_notify = True if request.form.get('to_notify') == 'True' else False
-        event.time_notify = main.str_to_datetime(request.form.get('date_notify')) if request.form.get(
-            'date_notify') else None
+        if request.form.get('date_notify'):
+            event.time_notify = main.str_to_datetime(request.form.get('date_notify'),
+                                                     request.form.get('time_notify'))
+        else:
+            event.time_notify = None
         event.notification_sent = True if request.form.get('notify_sent') == 'True' else False
 
-        # Check if all day event or not.
+        # Check if event ia all_day event or not.
         if request.form.get('time_event_start'):
             time_event_start_db = main.str_to_datetime(request.form.get('date_event_start'),
                                                   request.form.get('time_event_start'))
@@ -319,15 +320,16 @@ def act_event(event_id):
 @login_required
 @admin_required
 def notify():
-    # service_run = True if scheduler.get_jobs() else False
-
+    """
+    Func allows to start notification service and change the service configuration.
+    """
     # Notification config data (for interval and interval unit).
     notification_config = Notification.query.first()
     # Mail config data.
     notify_config = {
         'mail_server': current_app.config['MAIL_SERVER'],
         'mail_port': current_app.config['MAIL_PORT'],
-        'mail_tls': current_app.config['MAIL_USE_TLS'],
+        'mail_security': current_app.config['MAIL_SECURITY'],
         'mail_username': current_app.config['MAIL_USERNAME'],
         'notify_unit': notification_config.notify_unit,
         'notify_interval': notification_config.notify_interval,
@@ -344,7 +346,7 @@ def notify():
         notify_interval_form = request.form.get('notify_interval')
         mail_server_form = request.form.get('mail_server')
         mail_port_form = request.form.get('mail_port')
-        mail_tls_form = request.form.get('mail_tls')
+        mail_security_form = request.form.get('mail_security')
         mail_username_form = request.form.get('mail_username')
         mail_password_form = request.form.get('mail_password')
 
@@ -355,47 +357,52 @@ def notify():
         if mail_port_form != notify_config['mail_port']:
             current_app.config['MAIL_PORT'] = mail_port_form
             notify_config['mail_port'] = mail_port_form
-        if mail_tls_form != notify_config['mail_tls']:
-            current_app.config['MAIL_USE_TLS'] = mail_tls_form
-            notify_config['mail_tls'] = mail_tls_form
+        if mail_security_form != notify_config['mail_security']:
+            current_app.config['MAIL_SECURITY'] = mail_security_form
+            notify_config['mail_security'] = mail_security_form
         if mail_username_form != notify_config['mail_username']:
             current_app.config['MAIL_USERNAME'] = mail_username_form
             notify_config['mail_username'] = mail_username_form
-        if not mail_password_form:
+        if mail_password_form:
             current_app.config['MAIL_PASSWORD'] = mail_password_form
 
-        # Test mail SERVER configuration
-        if request.form.get('mail-test-btn'):
-            # flash('The mail service testing in progress...', 'warning')
-            send_test_email()
-        else:
-            # check weather some scheduler jobs exist
-            # if scheduler.running:
-            # print(scheduler.get_jobs())
-            if not notify_status_form and scheduler.get_jobs():
-                scheduler.remove_job('my_job_id')
-                flash('The notify service has been turned off!', 'success')
-            elif notify_status_form == 'on':
-                if notify_unit_form == 'seconds':
-                    scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
-                                      seconds=int(notify_interval_form), id='my_job_id')
-                elif notify_unit_form == 'minutes':
-                    scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
-                                      minutes=int(notify_interval_form), id='my_job_id')
-                else:
-                    scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
-                                      hours=int(notify_interval_form), id='my_job_id')
-                flash('The notify service is running!', 'success')
+        # check weather some scheduler jobs exist
+        # if scheduler.running:
+        # print(scheduler.get_jobs())
 
-        # Update the rest of the data in 'notify_config' dic.
-        notify_config['notify_unit'] = notify_unit_form
-        notify_config['notify_interval'] = notify_interval_form
+        # Test mail configuration before running service
+        if notify_status_form == 'on':
+            test_mail_config = smtp_mail.test_email()
+        else:
+            test_mail_config = False
+
+        # Test mail configuration before running service.
+        if not notify_status_form and scheduler.get_jobs():
+            scheduler.remove_job('my_job_id')
+            flash('The notify service has been turned off!', 'success')
+        elif scheduler.get_jobs() and not test_mail_config:
+            scheduler.remove_job('my_job_id')
+        elif notify_status_form == 'on' and test_mail_config:
+            if notify_unit_form == 'seconds':
+                scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
+                                  seconds=int(notify_interval_form), id='my_job_id')
+            elif notify_unit_form == 'minutes':
+                scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
+                                  minutes=int(notify_interval_form), id='my_job_id')
+            else:
+                scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
+                                  hours=int(notify_interval_form), id='my_job_id')
+            flash('Connection with mail server established correctly! The notify service is running!', 'success')
 
         # Save notification settings to db.
         if notify_unit_form != notify_config['notify_unit'] or notify_interval_form != notify_config['notify_interval']:
             notification_config.notify_unit = notify_unit_form
             notification_config.notify_interval = int(notify_interval_form)
             db.session.commit()
+
+        # Update the rest of the data in 'notify_config' dic.
+        notify_config['notify_unit'] = notify_unit_form
+        notify_config['notify_interval'] = notify_interval_form
 
     service_run = True if scheduler.get_jobs() else False
     return render_template('admin/notify.html', service_run=service_run, **notify_config)

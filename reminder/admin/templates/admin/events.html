@@ -6,72 +6,126 @@
 {% endblock %}
 
 {% block body %}
+<div class="row">
+    <div class="col-sm-12 col-md-6">
 
+    </div>
+    <div class="col-sm-12 col-md-6">
+
+    </div>
+
+</div>
     <table class="table table-hover">
-        <thead class="thead-light text-align-middle">
+        <thead class="thead-light">
         <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Event ID</th>
-            <th>Event start</th>
-            <th>Event stop</th>
-            <th>Notify?</th>
-            <th>Is active?</th>
-            <th></th>
-            <th></th>
-            <th></th>
+            <th class="align-middle">#</th>
+            <th class="align-middle">
+                {% if request.args.get('col') == 'title' and request.args.get('dir') == 'desc' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='title', dir='asc') }}">Title  <span data-feather="chevron-down"></span></a>
+                {% elif request.args.get('col') == 'title' and request.args.get('dir') == 'asc' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='title', dir='desc') }}">Title  <span data-feather="chevron-up"></span></a>
+                {% else %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='title', dir='asc') }}">Title</a>
+                {% endif %}
+            </th>
+            <th class="align-middle">
+                {% if request.args.get('col') == 'id' and request.args.get('dir') == 'desc' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='id', dir='asc') }}">Event ID  <span data-feather="chevron-down"></span></a>
+                {% elif request.args.get('col') == 'id' and request.args.get('dir') == 'asc' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='id', dir='desc') }}">Event ID  <span data-feather="chevron-up"></span></a>
+                {% else %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='id', dir='asc') }}">Event ID</a>
+                {% endif %}
+            </th>
+            <th class="align-middle">
+                {% if request.args.get('col') == 'start' and request.args.get('dir') == 'desc' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='start', dir='asc') }}">Event start  <span data-feather="chevron-down"></span></a>
+                {% elif request.args.get('col') == 'start' and request.args.get('dir') == 'asc' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='start', dir='desc') }}">Event start  <span data-feather="chevron-up"></span></a>
+                {% elif not request.args %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='start', dir='desc') }}">Event start  <span data-feather="chevron-up"></span></a>
+                {% else %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='start', dir='desc') }}">Event start</span></a>
+                {% endif %}
+            </th>
+            <th class="align-middle">
+                {% if request.args.get('col') == 'stop' and request.args.get('dir') == 'asc' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='stop', dir='desc') }}">Event stop  <span data-feather="chevron-up"></span></a>
+                {% elif request.args.get('col') == 'stop' and request.args.get('dir') == 'desc' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='stop', dir='asc') }}">Event stop  <span data-feather="chevron-down"></span></a>
+                {% else %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='stop', dir='asc') }}">Event stop</span></a>
+                {% endif %}
+            </th>
+            <th class="align-middle">
+                {% if request.args.get('col') == 'notify' and request.args.get('dir') == 'yes' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='no') }}">Notify?</a>
+                {% else %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='yes') }}">Notify?</a>
+                {% endif %}
+            </th>
+            <th class="align-middle">
+                {% if request.args.get('col') == 'active' and request.args.get('dir') == 'yes' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='active', dir='no') }}">Is active?</a>
+                {% else %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='active', dir='yes') }}">Is active?</a>
+                {% endif %}
+            </th>
+            <th class="align-middle"></th>
+            <th class="align-middle"></th>
+            <th class="align-middle"></th>
         </tr>
         </thead>
         <tbody>
         {% for event in events %}
             {% if not event.is_active %}
-            <tr class="list-group-item-danger">
+            <tr class="list-group-item-danger align-middle">
             {% else %}
-            <tr>
+            <tr class="align-middle">
             {% endif %}
 
-                <th scope="row">{{ loop.index }}</th>
-                <td>{{ event.title }}</td>
-                <td>{{ event.id }}</td>
-                <td>
+                <th class="align-middle" scope="row">{{ loop.index }}</th>
+                <td class="align-middle">{{ event.title }}</td>
+                <td class="align-middle">{{ event.id }}</td>
+                <td class="align-middle">
                     {% if event.all_day_event %}
                         {{ event.time_event_start.strftime('%Y-%m-%d') }}
                     {% else %}
                         {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }}
                     {% endif %}
                 </td>
-                <td>
+                <td class="align-middle">
                     {% if event.all_day_event %}
                         {{ event.time_event_stop.strftime('%Y-%m-%d') }}
                     {% else %}
                         {{ event.time_event_stop.strftime('%Y-%m-%d %H:%M') }}
                     {% endif %}
                 </td>
-                <td>
+                <td class="align-middle">
                     {% if event.to_notify %}
                         Yes
                     {% else %}
                         No
                     {% endif %}
                 </td>
-                <td>
+                <td class="align-middle">
                     {% if event.is_active %}
                         Yes
                     {% else %}
                         No
                     {% endif %}
                 </td>
-                <td>
+                <td class="align-middle">
                     <a href="{{ url_for('admin_bp.event', event_id=event.id) }}" class="btn btn-sm btn-block btn-info">Details</a>
                 </td>
-                <td>
+                <td class="align-middle">
                     {% if event.is_active %}
                     <a href="{{ url_for('admin_bp.act_event', event_id=event.id) }}" class="btn btn-sm btn-block btn-warning">Deactivate</a>
                     {% else %}
                     <a href="{{ url_for('admin_bp.act_event', event_id=event.id) }}" class="btn btn-sm btn-block btn-success">Activate</a>
                     {% endif %}
                 </td>
-                <td>
+                <td class="align-middle">
                     <a href="{{ url_for('admin_bp.del_event', event_id=event.id) }}" class="btn btn-sm btn-block btn-danger">Delete</a>
                 </td>
         </tr>

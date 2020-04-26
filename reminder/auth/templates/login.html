@@ -5,18 +5,24 @@
 {% endblock %}
 
 {% block body %}
-    <form action="" method="POST">
+<div class="text-center">
+    <form action="" method="POST" class="form-signin">
         {{ form.hidden_tag() }}
+        <img class="mb-4" src="{{ url_for('static', filename='login.png') }}" alt="" width="110" height="100">
+        <div class="row justify-content-md-center">
         <p>
-            {{ form.username.label }}<br>
-            {{ form.username(size=32) }}<br>
+            {{ form.username(placeholder="Username", size=32, class="form-control align-items: center;") }}<br>
         </p>
+        </div>
+        <div class="row justify-content-md-center">
         <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=32) }}
+            {{ form.password(placeholder="Password", size=32, class="form-control input-sm") }}
         </p>
-        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-        <p>{{ form.submit() }}</p>
+        </div>
+                <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+        <div class="row justify-content-md-center ">
+        {{ form.submit(class="btn btn-secondary btn-lg") }}
+        </div>
     </form>
-
+</div>
 {% endblock %}

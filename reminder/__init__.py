@@ -6,7 +6,6 @@ from flask_login import LoginManager
 # from apscheduler.schedulers.background import BackgroundScheduler
 from flask_apscheduler import APScheduler
 from flask_wtf.csrf import CSRFProtect
-from flask_mail import Mail
 # from flask_bcrypt import Bcrypt
 
 
@@ -14,7 +13,6 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 csrf = CSRFProtect()
 migrate = Migrate()
-mail = Mail()
 # scheduler = BackgroundScheduler()
 scheduler = APScheduler()
 
@@ -37,8 +35,6 @@ def create_app():
     # 'migrate' object represents the migration engine
     migrate.init_app(app, db)
 
-    # initialize mail service object
-    mail.init_app(app)
     # use to hash passwords bcrypt = Bcrypt(app)
 
     # use for user log in
