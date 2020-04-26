@@ -40,7 +40,7 @@ class User(db.Model, UserMixin):
                                      foreign_keys='Event.author_uid')
     events_notified = db.relationship('Event',
                                       secondary=user_to_event,
-                                      backref=db.backref('notified_uids', lazy='dynamic'))
+                                      back_populates='notified_uids')
     # Weather user can login by login page and add new notify records.
     access_granted = db.Column(db.Boolean, nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
@@ -88,7 +88,9 @@ class Event(db.Model):
     # Weather the notification has already been sent.
     notification_sent = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
-    # notified_uids
+    notified_uids = db.relationship('User',
+                                    secondary=user_to_event,
+                                    back_populates='events_notified')
 
     def __repr__(self):
         return f'Event {self.title}'

@@ -46,12 +46,12 @@ class User(Base):
     password_hash = Column(String(128), nullable=False)
     email = Column(String(120), unique=True, nullable=False)
     events_created = relationship('Event',
-                                     backref='author',
-                                     lazy='dynamic',
-                                     foreign_keys='Event.author_uid')
+                                  backref='author',
+                                  lazy='dynamic',
+                                  foreign_keys='Event.author_uid')
     events_notified = relationship('Event',
-                                      secondary=user_to_event,
-                                      backref=backref('notified_uids', lazy='dynamic'))
+                                   secondary=user_to_event,
+                                   back_populates='notified_uids')
     access_granted = Column(Boolean, nullable=False)
     role_id = Column(Integer, ForeignKey('role.id'))
     last_seen = Column(DateTime)
@@ -73,6 +73,9 @@ class Event(Base):
     author_uid = Column(Integer, ForeignKey('user.id'))
     notification_sent = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
+    notified_uids = relationship('User',
+                                 secondary=user_to_event,
+                                 back_populates='events_notified')
 
 
 class Notification(Base):
