@@ -17,7 +17,7 @@ Below instructions will get you a copy of the project up and running on your loc
 * [Flask-SQLalchemy](https://flask-sqlalchemy.palletsprojects.com/en/2.x/)
 * [Flask-WTF](https://flask-wtf.readthedocs.io/en/stable/)
 * [Flask-APSchedular](https://github.com/viniciuschiele/flask-apscheduler)
-* [Flask-login](https://flask-login.readthedocs.io/en/latest/)
+* [Flask-Login](https://flask-login.readthedocs.io/en/latest/)
 
 ### Installation
 
