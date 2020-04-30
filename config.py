@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 
 class Config:
@@ -8,6 +9,8 @@ class Config:
     # General Config
     SECRET_KEY = os.environ.get('SECRET_KEY')
     JSONIFY_PRETTYPRINT_REGULAR = True
+    BASE_DIR = Path(__file__).resolve().parent
+    LOGS_DIR = BASE_DIR.joinpath('logs')
     # Cookies lifetime is 1800 sek (30 min).
     # PERMANENT_SESSION_LIFETIME = 1800
 

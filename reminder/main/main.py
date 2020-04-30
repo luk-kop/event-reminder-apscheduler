@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort, current_app
 from reminder import db, scheduler
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from reminder.models import User, Event, Role
@@ -6,6 +6,7 @@ from werkzeug.exceptions import HTTPException
 from sqlalchemy import func, or_, and_
 import datetime
 from reminder.admin.admin import admin_required
+import logging
 
 
 main_bp = Blueprint('main_bp', __name__,
@@ -48,6 +49,7 @@ def index():
     """
     Display all events on FullCalendar.
     """
+    current_app.logger.error('Test')
     events = Event.query.all()
     return render_template('index.html', events=events, title='Home')
 

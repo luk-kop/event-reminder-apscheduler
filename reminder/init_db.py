@@ -56,6 +56,7 @@ class User(Base):
     role_id = Column(Integer, ForeignKey('role.id'))
     last_seen = Column(DateTime)
     creation_date = Column(DateTime, default=datetime.utcnow)
+    failed_login_attempts = Column(Integer, default=0)
 
 
 class Event(Base):
@@ -401,6 +402,29 @@ if __name__ == '__main__':
               to_notify=True,
               time_notify=today_with_minutes + timedelta(minutes=6),
               author_uid=random_user_id(),
+              ),
+        Event(title='Home NAS update',
+              details='Nam libero metus, luctus quis bibendum lobortis, tristique a mauris. Pellentesque semper leo '
+                      'sit amet dolor semper iaculis. Donec tristique massa a tortor tempus finibus.',
+              time_creation=today - timedelta(days=23, hours=10),
+              all_day_event=False,
+              time_event_start=today - timedelta(days=22, hours=10),
+              time_event_stop=today - timedelta(days=22, hours=7),
+              to_notify=True,
+              time_notify=today_with_minutes - timedelta(days=22, hours=16),
+              author_uid=random_user_id(),
+              notification_sent=True
+              ),
+        Event(title='Lorem ipsum dolor sit amet',
+              details='Cras molestie viverra dui in tincidunt. Vivamus scelerisque nunc in porta vestibulum.',
+              time_creation=today - timedelta(days=22, hours=10),
+              all_day_event=True,
+              time_event_start=today - timedelta(days=21),
+              time_event_stop=today - timedelta(days=19),
+              to_notify=True,
+              time_notify=today_with_minutes - timedelta(days=22, hours=16),
+              author_uid=random_user_id(),
+              notification_sent=True
               ),
     ]
 

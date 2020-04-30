@@ -46,6 +46,7 @@ class User(db.Model, UserMixin):
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     last_seen = db.Column(db.DateTime)
     creation_date = db.Column(db.DateTime, default=datetime.utcnow)
+    failed_login_attempts = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f'{self.username}'
