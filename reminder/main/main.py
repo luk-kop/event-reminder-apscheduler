@@ -49,7 +49,7 @@ def index():
     """
     Display all events on FullCalendar.
     """
-    current_app.logger.error('Test')
+    # current_app.logger.error('Test')
     events = Event.query.all()
     return render_template('index.html', events=events, title='Home')
 

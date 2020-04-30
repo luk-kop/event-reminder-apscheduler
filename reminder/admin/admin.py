@@ -15,14 +15,6 @@ admin_bp = Blueprint('admin_bp', __name__,
                      template_folder='templates',
                      static_folder='static')
 
-# logger for the admin blueprint
-logs_dir = current_app.config['LOGS_DIR']
-logger_admin = logging.getLogger("admin.auth")
-file_handler_admin = RotatingFileHandler(f'{logs_dir}/admin.log', maxBytes=30720, backupCount=5)
-file_handler_admin.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', '%Y-%m-%d %H:%M:%S'))
-logger_admin.setLevel(logging.DEBUG)
-logger_admin.addHandler(file_handler_admin)
-
 
 def admin_required(func):
     """
@@ -56,12 +48,12 @@ def background_job():
                 smtp_mail.send_email('Attention! Upcoming event!',
                            users_to_notify,
                            event)
-                logger_admin.info(f'Notification service. Mail sent to: {users_to_notify}')
+                current_app.logger_admin.info(f'Notification service. Mail sent to: {users_to_notify}')
                 print(f'Mail sent to {users_to_notify}')
                 event.notification_sent = True
                 db.session.commit()
         except Exception as error:
-            logger_admin.error(f'Background job error: {error}')
+            current_app.logger_admin.error(f'Background job error: {error}')
             # Remove job when error occure.
             scheduler.remove_job('my_job_id')
 
@@ -242,7 +234,7 @@ def new_user():
             user.set_password(current_app.config['USER_DEFAULT_PASS'])
         db.session.add(user)
         db.session.commit()
-        logger_admin.info(f'User "{user.username}" has been added to db')
+        current_app.logger_admin.info(f'User "{user.username}" has been added to db')
         flash(f'User "{user.username}" has been added!', 'success')
         return redirect(url_for('admin_bp.users'))
     return render_template('admin/new_user.html', title='New user')
@@ -275,7 +267,7 @@ def user(user_id):
         # if request.form.password and not user.check_password(request.form.password):
         #     user.set_password(request.form.password)
         db.session.commit()
-        logger_admin.info(f'User "{user.username}" data has been changed')
+        current_app.logger_admin.info(f'User "{user.username}" data has been changed')
         flash('Your changes have been saved!', 'success')
         return redirect(url_for('admin_bp.users'))
     return render_template('admin/user.html', user=user)
@@ -292,7 +284,7 @@ def del_user(user_id):
         flash("Sorry! You can't delete yourself!", 'danger')
         return redirect(url_for('admin_bp.users'))
     user = User.query.filter_by(id=user_id).first()
-    logger_admin.warning(f'User "{user.username} has been deleted from db"')
+    current_app.logger_admin.warning(f'User "{user.username} has been deleted from db"')
     db.session.delete(user)
     db.session.commit()
     flash(f'User "{user.username}" has been deleted!', 'success')
@@ -395,15 +387,15 @@ def notify():
         # Test mail configuration before running service.
         if not notify_status_form and scheduler.get_jobs():
             scheduler.remove_job('my_job_id')
-            logger_admin.info(f'Notification service has been turned off by "{current_user.username}"')
+            current_app.logger_admin.info(f'Notification service has been turned off by "{current_user.username}"')
             flash('The notify service has been turned off!', 'success')
         elif scheduler.get_jobs() and not test_mail_config:
             scheduler.remove_job('my_job_id')
         elif notify_status_form == 'on' and test_mail_config:
             if not scheduler.get_jobs():
-                logger_admin.info(f'Notification service has been started by "{current_user.username}"')
+                current_app.logger_admin.info(f'Notification service has been started by "{current_user.username}"')
             else:
-                logger_admin.info(f'Notification service config has been changed by "{current_user.username}"')
+                current_app.logger_admin.info(f'Notification service config has been changed by "{current_user.username}"')
             if notify_unit_form == 'seconds':
                 scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
                                   seconds=int(notify_interval_form), id='my_job_id')
@@ -421,7 +413,7 @@ def notify():
             notification_config.notify_interval = int(notify_interval_form)
             db.session.commit()
             if not scheduler.get_jobs():
-                logger_admin.info(f'Notification service config has been changed by "{current_user.username}"')
+                current_app.logger_admin.info(f'Notification service config has been changed by "{current_user.username}"')
 
         # Update the rest of the data in 'notify_config' dic.
         notify_config['notify_unit'] = notify_unit_form

@@ -4,3 +4,4 @@ __pycache__/
 event_env/
 start_app.sh
 *.db
+logs/
