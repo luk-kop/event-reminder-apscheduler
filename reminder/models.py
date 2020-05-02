@@ -102,3 +102,17 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     notify_unit = db.Column(db.String(10), unique=True)
     notify_interval = db.Column(db.Integer)
+
+
+class Log(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    log_name = db.Column(db.String) # the name of the logger. (e.g. myapp.views)
+    level = db.Column(db.String) # info, debug, or error?
+    msg = db.Column(db.String) # any custom log you may have included
+    time = db.Column(db.DateTime) # the current timestamp
+
+    def __init__(self, log_name, level, time, msg):
+        self.log_name = log_name
+        self.level = level
+        self.time = time
+        self.msg = msg

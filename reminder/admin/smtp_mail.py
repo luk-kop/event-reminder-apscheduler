@@ -1,4 +1,5 @@
 from flask import current_app, render_template, flash
+from flask_login import current_user
 import smtplib
 from email.message import EmailMessage
 
@@ -10,7 +11,6 @@ def email_content(recipients_list, event, smtp_obj, msg):
     """
     for recipient in recipients_list:
         # Send emails.
-        print(f'Sending email to \'{recipient}\'...')
         # Removes the previous recipient from the inside of the msg object.
         # Only the current recipient is visible in content.
         msg.__delitem__('To')
@@ -23,8 +23,8 @@ def email_content(recipients_list, event, smtp_obj, msg):
         msg.set_content(text)
         msg.add_alternative(html, subtype='html')
         smtp_obj.send_message(msg)
-        print(f'The message has been sent to \'{recipient}\'')
-    print('All emails have been sent out')
+        current_app.logger_admin.info(f'Email service: msg has been sent to "{recipient}"')
+    current_app.logger_admin.info(f'Email service: all emails have been sent out')
 
 
 def send_email(subject, recipients, event):
@@ -52,17 +52,17 @@ def send_email(subject, recipients, event):
             smtp_obj.starttls()
             smtp_obj.ehlo()
             smtp_obj.login(mail_sender, mail_pass)
-            print(f'Connected with \'{mail_server}:{mail_port}\'\n')
+            current_app.logger_admin.info(f'Email service: connected with "{mail_server}:{mail_port}"')
             email_content(recipients_list, event, smtp_obj, msg)
-        print(f'\nDisconnected with \'{mail_server}:{mail_port}\'')
+        current_app.logger_admin.info(f'Email service: disconected with "{mail_server}:{mail_port}"')
     elif mail_security == 'ssl':
         with smtplib.SMTP_SSL(host=mail_server, port=mail_port, timeout=5) as smtp_obj:
             # smtp_obj.set_debuglevel(1)
             smtp_obj.ehlo()
             smtp_obj.login(mail_sender, mail_pass)
-            print(f'Connected with \'{mail_server}:{mail_port}\'\n')
+            current_app.logger_admin.info(f'Email service: connected with "{mail_server}:{mail_port}"')
             email_content(recipients_list, event, smtp_obj, msg)
-        print(f'\nDisconnected with \'{mail_server}:{mail_port}\'')
+        current_app.logger_admin.info(f'Email service: disconected with "{mail_server}:{mail_port}"')
 
 
 def test_email():
@@ -82,7 +82,6 @@ def test_email():
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
                 smtp_obj.login(mail_sender, mail_pass)
-                print(f'Connected with \'{mail_server}:{mail_port}\'\n')
                 # flash('Connection with mail server established correctly! The notify service is running!', 'success')
                 return True
         elif mail_security == 'ssl':
@@ -94,9 +93,11 @@ def test_email():
                 return True
     except smtplib.SMTPAuthenticationError:
         flash('Connection issue. Check your credentials!', 'danger')
+        current_app.logger_admin.info('Email service test: connection issue, wrong credentials')
         return False
     except Exception as error:
         flash('Connection issue. Check mail configurration!', 'danger')
+        current_app.logger_admin.info('Email service test: connection issue, wrong configuration')
         return False
 
 

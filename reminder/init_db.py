@@ -87,6 +87,21 @@ class Notification(Base):
     notify_interval = Column(Integer)
 
 
+class Log(Base):
+    __tablename__ = 'log'
+    id = Column(Integer, primary_key=True)
+    log_name = Column(String)
+    level = Column(String)
+    msg = Column(String)
+    time = Column(DateTime)
+
+    def __init__(self, log_name, level, time, msg):
+        self.log_name = log_name
+        self.level = level
+        self.time = time
+        self.msg = msg
+
+
 if __name__ == '__main__':
 
     db_name = input('\nEnter name for DB [app.db]:')

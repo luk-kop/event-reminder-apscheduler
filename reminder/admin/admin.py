@@ -7,8 +7,6 @@ from sqlalchemy import func, or_, desc, asc
 import datetime
 from reminder.main import main
 from reminder.admin import smtp_mail
-import logging
-from logging.handlers import RotatingFileHandler
 
 
 admin_bp = Blueprint('admin_bp', __name__,
@@ -33,8 +31,9 @@ def background_job():
     Run process in background.
     """
     # get the app object
-    app = scheduler.app
-    with app.app_context():
+    # app = scheduler.app
+
+    with scheduler.app.app_context():
         today = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
         print(today)    # only for tests
         events_to_notify = Event.query.filter(Event.time_notify <= today,
@@ -44,11 +43,10 @@ def background_job():
         try:
             for event in events_to_notify:
                 users_to_notify = [user for user in event.notified_uids]
-                print(f'{event}, {event.time_notify}, {event.notification_sent} {users_to_notify}', )
                 smtp_mail.send_email('Attention! Upcoming event!',
                            users_to_notify,
                            event)
-                current_app.logger_admin.info(f'Notification service. Mail sent to: {users_to_notify}')
+                current_app.logger_admin.info(f'Notification service: mail sent to: {users_to_notify}')
                 print(f'Mail sent to {users_to_notify}')
                 event.notification_sent = True
                 db.session.commit()
