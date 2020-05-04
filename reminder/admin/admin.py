@@ -1,10 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app
-from reminder import db, scheduler
-from reminder.models import Role, User, Event, Notification
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
-from functools import wraps
-from sqlalchemy import func, or_, desc, asc
 import datetime
+
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app
+from flask_login import current_user, login_required
+from functools import wraps
+from sqlalchemy import func, desc, asc
+
+from reminder.extensions import db, scheduler
+from reminder.models import Role, User, Event, Notification, Log
 from reminder.main import main
 from reminder.admin import smtp_mail
 
@@ -84,7 +86,7 @@ def events():
         events = Event.query.order_by(asc(Event.id)).all()
     elif request.args.get('col') == 'start' and request.args.get('dir') == 'desc':
         events = Event.query.order_by(desc(Event.time_event_start)).all()
-    elif request.args.get('col') == 'id' and request.args.get('dir') == 'asc':
+    elif request.args.get('col') == 'start' and request.args.get('dir') == 'asc':
         events = Event.query.order_by(asc(Event.time_event_start)).all()
     elif request.args.get('col') == 'stop' and request.args.get('dir') == 'desc':
         events = Event.query.order_by(desc(Event.time_event_stop)).all()
@@ -428,5 +430,22 @@ def logs():
     """
     List logs.
     """
-    pass
-    return render_template('admin/logs.html')
+    if not request.args or (request.args.get('col') == 'date' and request.args.get('dir') == 'desc'):
+        logs = Log.query.order_by(desc(Log.time)).all()
+    elif request.args.get('col') == 'time' and request.args.get('dir') == 'desc':
+        logs = Log.query.order_by(desc(Log.time)).all()
+    elif request.args.get('col') == 'time' and request.args.get('dir') == 'asc':
+        logs = Log.query.order_by(asc(Log.time)).all()
+    elif request.args.get('col') == 'log_name' and request.args.get('dir') == 'desc':
+        logs = Log.query.order_by(desc(Log.log_name)).all()
+    elif request.args.get('col') == 'log_name' and request.args.get('dir') == 'asc':
+        logs = Log.query.order_by(asc(Log.log_name)).all()
+    elif request.args.get('col') == 'level' and request.args.get('dir') == 'asc':
+        logs = Log.query.order_by(asc(Log.level)).all()
+    elif request.args.get('col') == 'level' and request.args.get('dir') == 'desc':
+        logs = Log.query.order_by(desc(Log.level)).all()
+    else:
+        abort(404)
+
+
+    return render_template('admin/logs.html', logs=logs)

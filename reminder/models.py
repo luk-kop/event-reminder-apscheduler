@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
-from reminder import db, login_manager
-from werkzeug.security import generate_password_hash, check_password_hash   # czy lepiej uzyc from flask_bcrypt import Bcrypt
+
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, AnonymousUserMixin
+
+from reminder.extensions import db, login_manager
 
 
 @login_manager.user_loader
@@ -106,7 +108,7 @@ class Notification(db.Model):
 
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    log_name = db.Column(db.String) # the name of the logger. (e.g. myapp.views)
+    log_name = db.Column(db.String(100))
     level = db.Column(db.String) # info, debug, or error?
     msg = db.Column(db.String) # any custom log you may have included
     time = db.Column(db.DateTime) # the current timestamp
@@ -116,3 +118,11 @@ class Log(db.Model):
         self.level = level
         self.time = time
         self.msg = msg
+
+    @classmethod
+    def delete_expired(cls):
+        """Delete logs older than indicated time-frame."""
+        expiration_days = 7
+        limit = datetime.utcnow() - timedelta(days=expiration_days)
+        cls.query.filter(cls.time <= limit).delete
+        db.session.commit()

@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
-from reminder import db
-from reminder.models import Role, User
-from reminder.forms import LoginForm
+from flask_login import current_user, login_user, logout_user
 from werkzeug.urls import url_parse
-from logging.handlers import RotatingFileHandler
-import logging
+
+from reminder.extensions import db
+from reminder.models import User
+from reminder.forms import LoginForm
+
 
 
 auth_bp = Blueprint('auth_bp', __name__,

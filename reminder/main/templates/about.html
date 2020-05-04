@@ -5,8 +5,11 @@
 {% endblock %}
 
 {% block body %}
-        <div>
-            <p><strong>About page</strong> <small>test test test</small></p>
-        </div>
-
+<main role="main" class="container">
+    <div class="jumbotron">
+        <h1>Event Reminder Application</h1>
+        <p class="lead">The Event Reminder is a simple web application based on <a style="color: inherit;" href="https://flask.palletsprojects.com/en/1.1.x/">Flask</a> framework, <a style="color: inherit;" href="https://getbootstrap.com/">Bootstrap</a> user interface framework and <a style="color: inherit;" href="https://fullcalendar.io/">FullCalendar</a> full-sized JavaScript calendar.</p>
+        <a class="btn btn-lg btn-secondary" href="{{ url_for('main_bp.index')  }}" role="button">View Home Page &raquo;</a>
+    </div>
+</main>
 {% endblock %}

@@ -37,9 +37,6 @@ def send_email(subject, recipients, event):
     mail_server = current_app.config['MAIL_SERVER']
     mail_port = current_app.config['MAIL_PORT']
     mail_security = current_app.config['MAIL_SECURITY']
-    print()
-    print(recipients_list)
-    print()
     # Create the container email message.
     msg = EmailMessage()
     msg['Subject'] = subject

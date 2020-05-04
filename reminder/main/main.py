@@ -1,12 +1,13 @@
+import datetime
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort, current_app
-from reminder import db, scheduler
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
-from reminder.models import User, Event, Role
+from flask_login import current_user, login_required
 from werkzeug.exceptions import HTTPException
 from sqlalchemy import func, or_, and_
-import datetime
+
+from reminder.extensions import db
+from reminder.models import User, Event
 from reminder.admin.admin import admin_required
-import logging
 
 
 main_bp = Blueprint('main_bp', __name__,
@@ -21,14 +22,6 @@ def str_to_datetime(date_str, time_str=None):
     if not time_str:
         return datetime.datetime.fromisoformat(date_str)
     return datetime.datetime.fromisoformat(f'{date_str}T{time_str}')
-
-
-def event_process(event):
-    """
-    Fetch and process event data for event edition
-
-    """
-    pass
 
 
 @main_bp.before_request
@@ -49,7 +42,6 @@ def index():
     """
     Display all events on FullCalendar.
     """
-    # current_app.logger.error('Test')
     events = Event.query.all()
     return render_template('index.html', events=events, title='Home')
 
@@ -70,7 +62,6 @@ def events_list():
     Display all events in list format.
     """
     today = datetime.datetime.today()
-
     # Fetch all current event's authors from db.
     author_ids = set([_.author_uid for _ in Event.query.filter(and_(or_(Event.time_event_start >= today,
                                                                         Event.time_event_stop >= today)),
@@ -195,6 +186,7 @@ def new_event():
             db.session.add(user)
         db.session.commit()
         flash('New event has been added!', 'success')
+        current_app.logger_general.info(f'New event with id={event.id} has been added by "{current_user}"')
         return redirect(url_for('main_bp.index'))
     return render_template('new_event.html', title='New event', users=users_to_notify, today=today)
 
@@ -241,6 +233,7 @@ def event(event_id):
         event.notified_uids = [User.query.get(user_id) for user_id in users_form]
         db.session.commit()
         flash('Your changes have been saved!', 'success')
+        current_app.logger_general.info(f'Event with id={event.id} has been changed by "{current_user}"')
         return redirect(url_for('main_bp.events_list'))
     return render_template('event.html', event=event, title='Edit event', users=users_to_notify, today=today)
 
@@ -258,6 +251,7 @@ def deactive_event(event_id):
     event.is_active = False
     db.session.commit()
     flash(f'Event with title "{event.title}" has been deleted!', 'success')
+    current_app.logger_general.info(f'Event with id={event.id} has been deactivated by "{current_user}"')
     return redirect(url_for('main_bp.events_list'))
 
 

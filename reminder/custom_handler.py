@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+
 from reminder.models import Log
 
 
@@ -7,7 +8,6 @@ class DatabaseHandler(logging.Handler):
     """
     Custom log handler that emits logs to the db.
     """
-
     def __init__(self, session):
         super().__init__()
         self.session = session
