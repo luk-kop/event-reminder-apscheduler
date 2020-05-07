@@ -262,6 +262,7 @@ def user(user_id):
         if request.form.get('access') == 'True' and str(user.access_granted) != request.form.get('access'):
             user.failed_login_attempts = 0
         user.access_granted = True if request.form.get('access') == 'True' else False
+        user.pass_change_req = True if request.form.get('pass_reset') == 'True' else False
         user.role_id = str(Role.query.filter_by(name=request.form.get('role')).first().id)
         # check if password has been changed
         # if request.form.password and not user.check_password(request.form.password):

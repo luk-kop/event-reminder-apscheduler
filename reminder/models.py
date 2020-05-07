@@ -49,6 +49,7 @@ class User(db.Model, UserMixin):
     last_seen = db.Column(db.DateTime)
     creation_date = db.Column(db.DateTime, default=datetime.utcnow)
     failed_login_attempts = db.Column(db.Integer, default=0)
+    pass_change_req = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'{self.username}'
@@ -108,9 +109,9 @@ class Notification(db.Model):
 
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    log_name = db.Column(db.String(100))
+    log_name = db.Column(db.String)
     level = db.Column(db.String) # info, debug, or error?
-    msg = db.Column(db.String) # any custom log you may have included
+    msg = db.Column(db.String(100)) # any custom log you may have included
     time = db.Column(db.DateTime) # the current timestamp
 
     def __init__(self, log_name, level, time, msg):

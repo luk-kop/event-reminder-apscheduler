@@ -57,6 +57,7 @@ class User(Base):
     last_seen = Column(DateTime)
     creation_date = Column(DateTime, default=datetime.utcnow)
     failed_login_attempts = Column(Integer, default=0)
+    pass_change_req = Column(Boolean, default=False)
 
 
 class Event(Base):
@@ -92,7 +93,7 @@ class Log(Base):
     id = Column(Integer, primary_key=True)
     log_name = Column(String)
     level = Column(String)
-    msg = Column(String)
+    msg = Column(String(100))
     time = Column(DateTime)
 
     def __init__(self, log_name, level, time, msg):

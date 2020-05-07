@@ -1,3 +1,4 @@
+
 window.onload = function () {
                 var txtPassword = document.getElementById("id-password");
                 var txtConfirmPassword = document.getElementById("id-password2");

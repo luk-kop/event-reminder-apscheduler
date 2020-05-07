@@ -1,0 +1,38 @@
+{% extends 'base_main.html' %}
+
+{% block pagehead %}
+    Change Password
+{% endblock %}
+
+{% block body %}
+
+<div class="container h-100">
+    <div class="row h-100 justify-content-center align-items-center">
+        <form action="" method="POST" class="col-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="form-group">
+                <label for="id-curr_pass">Current password</label>
+                <input type="password" class="form-control" id="id-curr_pass" name="curr_pass" placeholder="Enter current password..." required>
+            </div>
+            <div class="form-group">
+                <label for="id-password">New password</label>
+                <input type="password" class="form-control" id="id-password" placeholder="New password..." pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Password must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" name="password" max="40" required>
+            </div>
+            <div class="form-group">
+                <label for="id-password2">Confirm new password</label>
+                <input type="password" class="form-control" id="id-password2" placeholder="Confirm new password..." name="password2" required>
+            </div>
+            <div class="d-flex flex-row justify-content-center align-items-center">
+                <input class="btn btn-success mr-4" type="submit" value="Submit">
+
+                <input type="submit" class="btn btn-danger" name="cancel-btn" value="Cancel" formnovalidate>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/pass_conf.js') }}"></script>
+{% endblock %}

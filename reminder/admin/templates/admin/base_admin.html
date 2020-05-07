@@ -67,16 +67,31 @@
         <ul class="navbar-nav px-3">
             <li class="nav-item text-nowrap">
                 {% if current_user.is_authenticated %}
-                <a class="nav-link" href="{{ url_for('auth_bp.logout') }}">
-                    <span data-feather="log-out"></span>
-                    Logout
+            <li class="nav-item text-nowrap dropdown">
+                <a class="nav-link dropdown-toggle" role="button" href="#" id="id-user_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span data-feather="smile"></span>
+                    {{ current_user.username }}
                 </a>
-                {% else %}
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="id-user_dropdown">
+                    <a class="dropdown-item" href="{{ url_for('auth_bp.change_pass') }}">
+                        <span data-feather="key"></span>
+                        Change password
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ url_for('auth_bp.logout') }}">
+                        <span data-feather="log-out"></span>
+                        Logout
+                    </a>
+                </div>
+            </li>
+            {% else %}
+            <li class="nav-item text-nowrap">
                 <a class="nav-link" href="{{ url_for('auth_bp.login') }}">
                     <span data-feather="log-in"></span>
                     Login
                 </a>
-                {% endif %}
+            </li>
+            {% endif %}
             </li>
         </ul>
 
@@ -107,31 +122,6 @@
                             </a>
                         </li>
                         {% endfor %}
-                        <!--
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_bp.new_user')  }}">
-                                <span data-feather="user-plus"></span>
-                                New user
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_bp.events') }}">
-                                <span data-feather="database"></span>
-                                Events
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_bp.notify') }}">
-                                <span data-feather="youtube"></span>
-                                Notification service
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_bp.logs') }}">
-                                <span data-feather="file-text"></span>
-                                Logs
-                            </a>
-                        </li>-->
                         {% endif %}
                         {% endif %}
                     </ul>

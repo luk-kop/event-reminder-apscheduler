@@ -47,6 +47,18 @@
                 {% endif %}
             </select>
         </div>
+        <div class="col-md-2 mb-3">
+            <label for="id-pass_reset">Change password on next login?</label>
+            <select id="id-pass_reset" class="form-control" name="pass_reset">
+                {% if user.pass_change_req %}
+                    <option value="True" selected>Yes</option>
+                    <option value="False">No</option>
+                {% else %}
+                    <option value="True">Yes</option>
+                    <option value="False" selected>No</option>
+                {% endif %}
+            </select>
+        </div>
     </div>
     <div class="form-row">
         <div class="col-md-4 mb-3">

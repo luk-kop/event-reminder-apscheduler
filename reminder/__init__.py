@@ -76,7 +76,7 @@ def configure_logger(app):
         os.mkdir(logs_dir)
 
     # create dedicated loggers
-    app.logger_general = logging.getLogger("general")
+    app.logger_general = logging.getLogger("main")
     my_formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', '%Y-%m-%d %H:%M:%S')
     file_handler = RotatingFileHandler(f'{logs_dir}/app.log', maxBytes=30720, backupCount=5)
     file_handler.setFormatter(my_formatter)

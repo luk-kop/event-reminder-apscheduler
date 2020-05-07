@@ -1,11 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
 
 from reminder.extensions import db
 from reminder.models import User
 from reminder.forms import LoginForm
-
 
 
 auth_bp = Blueprint('auth_bp', __name__,
@@ -51,6 +50,9 @@ def login():
         # reset login attempts
         user.failed_login_attempts = 0
         db.session.commit()
+        if current_user.pass_change_req:
+            flash('Please change your password', 'success')
+            return redirect(url_for('auth_bp.change_pass'))
         # next page value obtained from query string
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -69,3 +71,37 @@ def logout():
     logout_user()
     flash('You have been successfully logged out!', 'success')
     return redirect(url_for('main_bp.index'))
+
+
+@auth_bp.route('/change_pass', methods=['GET', 'POST'])
+@login_required
+def change_pass():
+    if request.method == "POST":
+        # If a "Cancel" button has been pressed.
+        if request.form.get('cancel-btn') == 'Cancel':
+            return redirect(url_for('main_bp.index'))      # to change
+        curr_pass = request.form.get('curr_pass')
+        new_pass = request.form.get('password')
+        if current_user.check_password(curr_pass):
+            current_user.set_password(new_pass)
+            if current_user.pass_change_req:
+                current_user.pass_change_req = False
+            db.session.commit()
+            current_app.logger_auth.info(f'User "{current_user.username}" changed the password')
+            flash('Password has been successfully changed!', 'success')
+            return redirect(url_for('main_bp.index'))
+        else:
+            current_app.logger_auth.warning(f'Failed password change by "{current_user.username}"')
+            current_user.failed_login_attempts += 1
+            if current_user.failed_login_attempts >= 3:
+                current_user.access_granted = False
+                current_app.logger_auth.warning(f'User "{current_user.username}" account has been blocked')
+                logout_user()
+                flash('Password change has been unsuccessful. Your account has been blocked!', 'danger')
+                return redirect(url_for('main_bp.index'))
+            db.session.commit()
+            current_app.logger_auth.warning(f'Failed password change. Current password does not much for "{current_user.username}"')
+            flash('The current password does not match! Please check your password', 'danger')
+    return render_template('pass_change.html', title='Change Password')
+
+    # TO DO: Add option - enforce change password on next login
