@@ -15,6 +15,7 @@
     </div>
 
 </div>
+
     <table class="table table-hover">
         <thead class="thead-light">
         <tr>
@@ -45,7 +46,7 @@
                 {% elif not request.args %}
                 <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='start', dir='desc') }}">Event start  <span data-feather="chevron-up"></span></a>
                 {% else %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='start', dir='desc') }}">Event start</span></a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='start', dir='desc') }}">Event start</a>
                 {% endif %}
             </th>
             <th class="align-middle">
@@ -54,19 +55,23 @@
                 {% elif request.args.get('col') == 'stop' and request.args.get('dir') == 'desc' %}
                 <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='stop', dir='asc') }}">Event stop  <span data-feather="chevron-down"></span></a>
                 {% else %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='stop', dir='asc') }}">Event stop</span></a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='stop', dir='asc') }}">Event stop</a>
                 {% endif %}
             </th>
             <th class="align-middle">
                 {% if request.args.get('col') == 'notify' and request.args.get('dir') == 'yes' %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='no') }}">Notify?</a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='no') }}">Notify? <span data-feather="thumbs-up"></span></a>
+                {% elif request.args.get('col') == 'notify' and request.args.get('dir') == 'no' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='yes') }}">Notify? <span data-feather="thumbs-down"></span></a>
                 {% else %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='yes') }}">Notify?</a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='yes') }}">Notify?</span></a>
                 {% endif %}
             </th>
             <th class="align-middle">
                 {% if request.args.get('col') == 'active' and request.args.get('dir') == 'yes' %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='active', dir='no') }}">Is active?</a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='active', dir='no') }}">Is active? <span data-feather="thumbs-up"></span></a>
+                {% elif request.args.get('col') == 'active' and request.args.get('dir') == 'no' %}
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='active', dir='yes') }}">Is active? <span data-feather="thumbs-down"></span></a>
                 {% else %}
                 <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='active', dir='yes') }}">Is active?</a>
                 {% endif %}
@@ -77,15 +82,15 @@
         </tr>
         </thead>
         <tbody>
-        {% for event in events %}
+        {% for event in events.items %}
             {% if not event.is_active %}
             <tr class="list-group-item-danger align-middle">
             {% else %}
             <tr class="align-middle">
             {% endif %}
 
-                <th class="align-middle" scope="row">{{ loop.index }}</th>
-                <td class="align-middle">{{ event.title }}</td>
+                <th class="align-middle" scope="row">{{ loop.index + events_per_page * (request.args.get('page', '1')|int - 1) }}</th>
+                <td class="align-middle" width="35%">{{ event.title }}</td>
                 <td class="align-middle">{{ event.id }}</td>
                 <td class="align-middle">
                     {% if event.all_day_event %}
@@ -134,4 +139,38 @@
         </tbody>
     </table>
 
+{% if events.items %}
+<nav aria-label="...">
+    <ul class="pagination">
+                <li class="page-item {{ 'disabled' if not prev_url }}">
+            <a class="page-link" href="{{ prev_url }}" tabindex="-1">Previous</a>
+        </li>
+        {% for page_num in events.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if page_num %}
+            {% if events.page == page_num %}
+                <li class="page-item active">
+                    {% if not request.args %}
+                        <a class="page-link" href="{{ url_for('admin_bp.events', col='start', dir='asc', page=page_num) }}">{{ page_num }} <span class="sr-only">(current)</span></a>
+                    {% else %}
+                        <a class="page-link" href="{{ url_for('admin_bp.events', col=request.args.get('col'), dir=request.args.get('dir'), page=page_num) }}">{{ page_num }} <span class="sr-only">(current)</span></a>
+                    {% endif %}
+                </li>
+            {% else %}
+                {% if not request.args %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('admin_bp.events', col='start', dir='asc', page=page_num) }}">{{ page_num }}</a></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('admin_bp.events', col=request.args.get('col'), dir=request.args.get('dir'), page=page_num) }}">{{ page_num }}</a></li>
+                {% endif %}
+        {% endif %}
+
+        {% else %}
+            <li class="page-item"><a class="page-link">...</a></li>
+        {% endif %}
+        {% endfor %}
+                <li class="page-item {{ 'disabled' if not next_url }}">
+            <a class="page-link" href="{{ next_url }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
 {% endblock %}

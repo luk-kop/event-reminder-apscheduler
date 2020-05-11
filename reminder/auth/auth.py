@@ -26,6 +26,9 @@ def update_last_seen():
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Log in user.
+    """
     # Check whether user is logged in
     if current_user.is_authenticated:
         return redirect(url_for('main_bp.index'))
@@ -76,6 +79,9 @@ def logout():
 @auth_bp.route('/change_pass', methods=['GET', 'POST'])
 @login_required
 def change_pass():
+    """
+    Change user password.
+    """
     if request.method == "POST":
         # If a "Cancel" button has been pressed.
         if request.form.get('cancel-btn') == 'Cancel':
@@ -83,6 +89,10 @@ def change_pass():
         curr_pass = request.form.get('curr_pass')
         new_pass = request.form.get('password')
         if current_user.check_password(curr_pass):
+            # New pass should be different than current one.
+            if current_user.check_password(new_pass):
+                flash('The new password should be different from the current one!', 'danger')
+                return redirect(url_for('auth_bp.change_pass'))
             current_user.set_password(new_pass)
             if current_user.pass_change_req:
                 current_user.pass_change_req = False
@@ -103,5 +113,3 @@ def change_pass():
             current_app.logger_auth.warning(f'Failed password change. Current password does not much for "{current_user.username}"')
             flash('The current password does not match! Please check your password', 'danger')
     return render_template('pass_change.html', title='Change Password')
-
-    # TO DO: Add option - enforce change password on next login

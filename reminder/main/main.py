@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort, current_app, session
 from flask_login import current_user, login_required
 from werkzeug.exceptions import HTTPException
 from sqlalchemy import func, or_, and_
@@ -61,36 +61,80 @@ def events_list():
     """
     Display all events in list format.
     """
+    # Clear session prev URL
+    if 'prev_endpoint' in session:
+        del session['prev_endpoint']
+
     today = datetime.datetime.today()
+    today_only_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
+    page = request.args.get('page', 1, type=int)
+    events_per_page = 10
+
     # Fetch all current event's authors from db.
     author_ids = set([_.author_uid for _ in Event.query.filter(and_(or_(Event.time_event_start >= today,
-                                                                        Event.time_event_stop >= today)),
+                                                                        Event.time_event_stop >= today,
+                                                                        and_(Event.all_day_event == True,
+                                                                             Event.time_event_stop == today_only_day))),
                                                                Event.is_active == True, ).all()])
     users = User.query.filter(User.role_id == 2).order_by(func.lower(User.username).asc()).all()
     # Check whether user is author (prepare list of authors)
     event_authors = [user for user in users if user.id in author_ids]
+    # Get 'author_id' from query param
+    author_id = request.args.get('id', type=int)
+
     if not request.args or request.args.get('list') == 'current':
         # Show only active events:
         events = Event.query.filter(and_(or_(Event.time_event_start >= today,
-                                             Event.time_event_stop >= today)),
-                                    Event.is_active == True).order_by("time_event_start").all()
+                                             Event.time_event_stop >= today,
+                                             and_(Event.all_day_event == True, Event.time_event_stop == today_only_day))),
+                                    Event.is_active == True).order_by("time_event_start").paginate(page, events_per_page, True)
     elif request.args.get('list') == 'own':
-        # Show only current user events.
         events = Event.query.filter(and_(or_(Event.time_event_start >= today,
-                                             Event.time_event_stop >= today)),
+                                             Event.time_event_stop >= today,
+                                             and_(Event.all_day_event == True, Event.time_event_stop == today_only_day))),
                                     Event.is_active == True, Event.author == current_user)\
-            .order_by("time_event_start").all()
+            .order_by("time_event_start").paginate(page, events_per_page, True)
     elif request.args.get('list') == 'all':
         # Show ALL events (current and old events)
-        events = Event.query.filter(Event.is_active == True).order_by("time_event_start").all()
-    elif request.args.get('list') == 'author' and int(request.args.get('id')) in author_ids:
+        events = Event.query.filter(Event.is_active == True).order_by("time_event_start").paginate(page, events_per_page, True)
+    elif request.args.get('list') == 'author' and author_id in author_ids:
         # Show current events by user.
-        events = Event.query.filter(and_(or_(Event.time_event_start >= today, Event.time_event_stop >= today)),
+        events = Event.query.filter(and_(or_(Event.time_event_start >= today, Event.time_event_stop >= today,
+                                             and_(Event.all_day_event == True, Event.time_event_stop == today_only_day))),
                                     Event.is_active == True,
-                                    Event.author_uid == request.args.get('id')).order_by("time_event_start").all()
+                                    Event.author_uid == str(author_id)).order_by("time_event_start")\
+            .paginate(page, events_per_page, True)
+    elif request.args.get('list') == 'author' and author_id not in author_ids:
+        return redirect(url_for('main_bp.events_list'))
     else:
         abort(404)
-    return render_template('events_list.html', events=events, title='List', today=today, event_authors=event_authors)
+
+    # URLs for pagination navigation
+    next_url = url_for('main_bp.events_list',
+                       list=request.args.get('list', 'current'),
+                       id=request.args.get('id'),
+                       page=events.next_num) if events.has_next else None
+    prev_url = url_for('main_bp.events_list',
+                       list=request.args.get('list', 'current'),
+                       id=request.args.get('id'),
+                       page=events.prev_num) if events.has_prev else None
+
+    if len(events.items) == 1 and not page == 1:
+        page -= 1
+    if request.args:
+        # Remember current url in session (for back-redirect)
+        session['prev_endpoint'] = url_for('main_bp.events_list',
+                                           list=request.args.get('list'),
+                                           id=request.args.get('id'),
+                                           page=page)
+    return render_template('events_list.html',
+                           events=events,
+                           title='List',
+                           today=today,
+                           today_only_day=today_only_day,
+                           event_authors=event_authors,
+                           next_url=next_url,
+                           prev_url=prev_url)
 
 
 @main_bp.route('/api/events')
@@ -117,7 +161,7 @@ def get_events():
         if event.time_event_start >= today:
             background_color = 'blue'
             border_color = 'blue'
-        elif event.time_event_stop >= today:
+        elif event.time_event_stop >= today or (event.all_day_event and event.time_event_stop.date() == today.date()):
             background_color = 'green'
             border_color = 'green'
         else:
@@ -146,8 +190,6 @@ def new_event():
     """
     Add new event to db.
     """
-    # print(request.form.getlist('notified_user'))
-    # notified_uids = request.form.getlist('notified_user')
     users_to_notify = User.query.filter_by(role_id=2).all()
     today = datetime.date.today().strftime("%Y-%m-%d")
     if request.method == "POST":
@@ -252,6 +294,9 @@ def deactive_event(event_id):
     db.session.commit()
     flash(f'Event with title "{event.title}" has been deleted!', 'success')
     current_app.logger_general.info(f'Event with id={event.id} has been deactivated by "{current_user}"')
+    # Redirect to previous URL
+    if 'prev_endpoint' in session:
+        return redirect(session['prev_endpoint'])
     return redirect(url_for('main_bp.events_list'))
 
 

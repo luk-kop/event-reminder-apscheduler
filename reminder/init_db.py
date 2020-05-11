@@ -65,13 +65,13 @@ class Event(Base):
     __tablename__ = 'event'
     id = Column(Integer, primary_key=True)
     title = Column(String(40), nullable=False)
-    details = Column(String(200))
+    details = Column(String(300))
     time_creation = Column(DateTime, index=True, default=datetime.utcnow)
     all_day_event = Column(Boolean, nullable=False)
     time_event_start = Column(DateTime, index=True)
     time_event_stop = Column(DateTime, index=True)
     to_notify = Column(Boolean, nullable=False)
-    time_notify = Column(DateTime, index=True)
+    time_notify = Column(DateTime, index=True, default=None)
     author_uid = Column(Integer, ForeignKey('user.id'))
     notification_sent = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
@@ -441,6 +441,152 @@ if __name__ == '__main__':
               time_notify=today_with_minutes - timedelta(days=22, hours=16),
               author_uid=random_user_id(),
               notification_sent=True
+              ),
+        Event(title='The oil change in the car',
+              details='Fusce id dapibus sem, pellentesque ultrices orci. Pellentesque auctor odio sed lectus '
+                      'sagittis dapibus. Nam velit neque, accumsan ac dapibus vel, mattis vel ipsum. Mauris malesuada '
+                      'luctus velit, non vestibulum leo laoreet id.',
+              time_creation=today - timedelta(days=10, hours=10),
+              all_day_event=True,
+              time_event_start=today - timedelta(days=9),
+              time_event_stop=today - timedelta(days=8),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=False
+              ),
+        Event(title='Payment for the VPS',
+              details='Phasellus luctus tempus tortor, eu laoreet orci facilisis id. Suspendisse potenti. '
+                      'Maecenas bibendum nisi et dictum tempor.',
+              time_creation=today - timedelta(days=10, hours=10),
+              all_day_event=True,
+              time_event_start=today + timedelta(days=9),
+              time_event_stop=today + timedelta(days=10),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=False
+              ),
+        Event(title='BTC halving day',
+              details='Maecenas bibendum nisi et dictum tempor.',
+              time_creation=today - timedelta(days=10, hours=9),
+              all_day_event=True,
+              time_event_start=today - timedelta(days=9),
+              time_event_stop=today - timedelta(days=8),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=True
+              ),
+        Event(title='Dinner at the mother-in-law\'s',
+              details='Ut vitae vehicula mi. Proin ac quam ullamcorper, viverra orci vitae, laoreet tortor. '
+                      'Vestibulum lobortis, ligula in accumsan aliquet, lorem neque molestie orci, id maximus '
+                      'lorem augue nec erat.',
+              time_creation=today - timedelta(days=10, hours=9),
+              all_day_event=False,
+              time_event_start=today + timedelta(days=11, hours=9),
+              time_event_stop=today + timedelta(days=12, hours=10),
+              to_notify=True,
+              time_notify=today_with_minutes + timedelta(days=8, hours=2),
+              author_uid=random_user_id(),
+              notification_sent=False,
+              is_active=True
+              ),
+        Event(title='Visit of a mother-in-law',
+              details='Ut fringilla tortor ac finibus tincidunt. In sollicitudin ultrices leo, at vehicula nisl '
+                      'condimentum vitae. Maecenas placerat elit quis nisl fermentum semper. '
+                      'Aliquam sit amet massa vel massa consequat vestibulum nec at lorem.',
+              time_creation=today - timedelta(days=11, hours=9),
+              all_day_event=False,
+              time_event_start=today - timedelta(days=7, hours=1),
+              time_event_stop=today - timedelta(days=5, hours=2),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=False,
+              ),
+        Event(title='Neque porro quisquam',
+              details='Aliquam sit amet massa vel massa consequat vestibulum nec at lorem.',
+              time_creation=today - timedelta(days=11, hours=9),
+              all_day_event=False,
+              time_event_start=today - timedelta(days=6, hours=2),
+              time_event_stop=today - timedelta(days=4, hours=3),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=True,
+              ),
+        Event(title='Ut vitae vehicula mi',
+              details='Curabitur aliquet pretium leo sit amet auctor. Donec dapibus, neque eget ullamcorper malesuada, '
+                      'purus tellus posuere risus, a rutrum tortor lacus ac turpis.',
+              time_creation=today - timedelta(days=15, hours=2),
+              all_day_event=False,
+              time_event_start=today - timedelta(days=13, hours=4),
+              time_event_stop=today - timedelta(days=11, hours=1),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=True,
+              ),
+        Event(title='Repairing garden furniture',
+              details='Purus tellus posuere risus, a rutrum tortor lacus ac turpis.',
+              time_creation=today - timedelta(days=10, hours=9),
+              all_day_event=False,
+              time_event_start=today - timedelta(days=7, hours=3),
+              time_event_stop=today - timedelta(days=6, hours=12),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=True,
+              ),
+        Event(title='Visit of the plumber',
+              details='Purus tellus posuere risus, a rutrum tortor lacus ac turpis.',
+              time_creation=today - timedelta(days=10, hours=3),
+              all_day_event=False,
+              time_event_start=today - timedelta(days=7, hours=0),
+              time_event_stop=today - timedelta(days=6, hours=20),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=True,
+              ),
+        Event(title='Business trip to Warsaw',
+              details='Vestibulum lobortis, ligula in accumsan aliquet, lorem neque molestie orci, '
+                      'id maximus lorem augue nec erat.',
+              time_creation=today - timedelta(days=1, hours=3),
+              all_day_event=True,
+              time_event_start=today + timedelta(days=9),
+              time_event_stop=today + timedelta(days=11),
+              to_notify=True,
+              time_notify=today_with_minutes + timedelta(days=7, hours=2),
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=True,
+              ),
+        Event(title='Business trip to Zakopane',
+              details='Ut hendrerit et lectus in dignissim. Quisque tristique odio leo, ut maximus justo dapibus ac. '
+                      'Pellentesque euismod velit arcu, sed venenatis ipsum tincidunt ac. Aliquam non gravida lorem.',
+              time_creation=today - timedelta(days=10, hours=3),
+              all_day_event=True,
+              time_event_start=today + timedelta(days=12),
+              time_event_stop=today + timedelta(days=14),
+              to_notify=True,
+              time_notify=today_with_minutes + timedelta(days=10, hours=6),
+              author_uid=random_user_id(),
+              notification_sent=True,
+              is_active=True,
+              ),
+        Event(title='Business trip to Poznan',
+              details='Proin quis metus vel nunc fermentum viverra. Maecenas a lacus dapibus, consectetur quam et, '
+                      'auctor dui.',
+              time_creation=today - timedelta(days=14, hours=6),
+              all_day_event=True,
+              time_event_start=today - timedelta(days=12, hours=5),
+              time_event_stop=today - timedelta(days=11, hours=3),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=False,
+              is_active=True,
               ),
     ]
 

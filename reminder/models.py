@@ -77,21 +77,20 @@ class Event(db.Model):
     """Events that will be notified"""
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(40), nullable=False)
-    details = db.Column(db.String(200))         # zmienić na większa wartosc
+    details = db.Column(db.String(300))
     time_creation = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     all_day_event = db.Column(db.Boolean, nullable=False)
     time_event_start = db.Column(db.DateTime, index=True)
     time_event_stop = db.Column(db.DateTime, index=True)
     # Whether to notify or not.
     to_notify = db.Column(db.Boolean, nullable=False)
-    time_notify = db.Column(db.DateTime, index=True)
-    # Who should be notified.
-    # notified_uid = db.Column(db.Integer, db.ForeignKey('user.id'))
+    time_notify = db.Column(db.DateTime, index=True, default=None)
     # Who is an author of notify record
     author_uid = db.Column(db.Integer, db.ForeignKey('user.id'))
     # Weather the notification has already been sent.
     notification_sent = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
+    # Who should be notified.
     notified_uids = db.relationship('User',
                                     secondary=user_to_event,
                                     back_populates='events_notified')

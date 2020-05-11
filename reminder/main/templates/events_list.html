@@ -14,18 +14,22 @@ List of events
     <div class="nav-item dropdown">
         <a class="nav-link dropdown-toggle {{ 'active' if request.args.get('list') == 'author' }}" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Events by author</a>
         <div class="dropdown-menu active">
-            {% for author in event_authors %}
-            <a class="dropdown-item" href="{{ url_for('main_bp.events_list', list='author', id=author.id) }}">{{ author.username }}</a>
-            {% endfor %}
+            {% if event_authors %}
+                {% for author in event_authors %}
+                <a class="dropdown-item" href="{{ url_for('main_bp.events_list', list='author', id=author.id) }}">{{ author.username }}</a>
+                {% endfor %}
+            {% else %}
+                <p style="text-align:center;">No authors</p>
+            {% endif %}
         </div>
     </div>
 </nav>
-{% for event in events %}
+{% for event in events.items %}
 <div class="accordion" id="accordion" role="tablist">
     <center>
         <div class="card border-secondary mb-2 card w-80">
             <!-- <div class="card-header list-group-item-success" role="tab" id="heading{{ event.id }}"> -->
-            <div class="card-header list-group-item-action list-group-item-{{ 'success' if event.time_event_start >= today or event.time_event_stop >= today else 'danger' }}" role="tab" id="heading{{ event.id }}">
+            <div class="card-header list-group-item-action list-group-item-{{ 'success' if event.time_event_start >= today or event.time_event_stop >= today or (event.all_day_event == True and event.time_event_stop == today_only_day) else 'danger' }}" role="tab" id="heading{{ event.id }}">
                 <h6 class="mb-0">
                     <a class="collapsed list-group-item-action" data-toggle="collapse" href="#collapse{{ event.id }}" aria-expanded="true" aria-controls="collapse{{ event.id }}">
                         <div class="row align-items-center">
@@ -96,9 +100,41 @@ List of events
         </div>
     </center>
 </div>
-
-
 {% endfor %}
 
+{% if events.items %}
+<nav aria-label="...">
+    <ul class="pagination">
+                <li class="page-item {{ 'disabled' if not prev_url }}">
+            <a class="page-link" href="{{ prev_url }}" tabindex="-1">Previous</a>
+        </li>
+        {% for page_num in events.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if page_num %}
+            {% if events.page == page_num %}
+                <li class="page-item active">
+                    {% if not request.args %}
+                        <a class="page-link" href="{{ url_for('main_bp.events_list', list='current', page=page_num) }}">{{ page_num }} <span class="sr-only">(current)</span></a>
+                    {% else %}
+                        <a class="page-link" href="{{ url_for('main_bp.events_list', list=request.args.get('list'), page=page_num, id=request.args.get('id')) }}">{{ page_num }} <span class="sr-only">(current)</span></a>
+                    {% endif %}
+                </li>
+            {% else %}
+                {% if not request.args %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('main_bp.events_list', list='current', page=page_num) }}">{{ page_num }}</a></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('main_bp.events_list', list=request.args.get('list'), page=page_num, id=request.args.get('id')) }}">{{ page_num }}</a></li>
+                {% endif %}
+            {% endif %}
+
+        {% else %}
+            <li class="page-item"><a class="page-link">...</a></li>
+        {% endif %}
+        {% endfor %}
+                <li class="page-item {{ 'disabled' if not next_url }}">
+            <a class="page-link" href="{{ next_url }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
 {% endblock body %}
 

@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, session
 from flask_login import current_user, login_required
 from functools import wraps
 from sqlalchemy import func, desc, asc
@@ -32,9 +32,6 @@ def background_job():
     """
     Run process in background.
     """
-    # get the app object
-    # app = scheduler.app
-
     with scheduler.app.app_context():
         today = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
         print(today)    # only for tests
@@ -78,35 +75,63 @@ def events():
     """
     Display all events from db in Admin Portal.
     """
+    # Pagination
+    events_per_page = 12
+    page = request.args.get('page', 1, type=int)
+
+    # Remember current url in session (for back-redirect)
+    session['prev_endpoint'] = url_for('admin_bp.events',
+                                  col=request.args.get('col'),
+                                  dir=request.args.get('dir'),
+                                  page=request.args.get('page'))
     if not request.args or (request.args.get('col') == 'start' and request.args.get('dir') == 'asc'):
-        events = Event.query.order_by("time_event_start").all()
+        events = Event.query.order_by("time_event_start").paginate(page, events_per_page, True)
     elif request.args.get('col') == 'id' and request.args.get('dir') == 'desc':
-        events = Event.query.order_by(desc(Event.id)).all()
+        events = Event.query.order_by(desc(Event.id)).paginate(page, events_per_page, True)
     elif request.args.get('col') == 'id' and request.args.get('dir') == 'asc':
-        events = Event.query.order_by(asc(Event.id)).all()
+        events = Event.query.order_by(asc(Event.id)).paginate(page, events_per_page, True)
     elif request.args.get('col') == 'start' and request.args.get('dir') == 'desc':
-        events = Event.query.order_by(desc(Event.time_event_start)).all()
+        events = Event.query.order_by(desc(Event.time_event_start)).paginate(page, events_per_page, True)
     elif request.args.get('col') == 'start' and request.args.get('dir') == 'asc':
-        events = Event.query.order_by(asc(Event.time_event_start)).all()
+        events = Event.query.order_by(asc(Event.time_event_start)).paginate(page, events_per_page, True)
     elif request.args.get('col') == 'stop' and request.args.get('dir') == 'desc':
-        events = Event.query.order_by(desc(Event.time_event_stop)).all()
+        events = Event.query.order_by(desc(Event.time_event_stop)).paginate(page, events_per_page, True)
     elif request.args.get('col') == 'stop' and request.args.get('dir') == 'asc':
-        events = Event.query.order_by(asc(Event.time_event_stop)).all()
+        events = Event.query.order_by(asc(Event.time_event_stop)).paginate(page, events_per_page, True)
     elif request.args.get('col') == 'title' and request.args.get('dir') == 'asc':
-        events = Event.query.order_by(func.lower(Event.title).asc()).all()
+        events = Event.query.order_by(func.lower(Event.title).asc()).paginate(page, events_per_page, True)
     elif request.args.get('col') == 'title' and request.args.get('dir') == 'desc':
-        events = Event.query.order_by(func.lower(Event.title).desc()).all()
+        events = Event.query.order_by(func.lower(Event.title).desc()).paginate(page, events_per_page, True)
     elif request.args.get('col') == 'notify' and request.args.get('dir') == 'yes':
-        events = Event.query.filter(Event.to_notify == True).all() + Event.query.filter(Event.to_notify == False).all()
+        events = Event.query.filter(Event.to_notify == True).order_by("time_event_start")\
+            .paginate(page, events_per_page, True)
     elif request.args.get('col') == 'notify' and request.args.get('dir') == 'no':
-        events = Event.query.filter(Event.to_notify == False).all() + Event.query.filter(Event.to_notify == True).all()
+        events = Event.query.filter(Event.to_notify == False).order_by("time_event_start")\
+            .paginate(page, events_per_page, True)
     elif request.args.get('col') == 'active' and request.args.get('dir') == 'no':
-        events = Event.query.filter(Event.is_active == False).all() + Event.query.filter(Event.is_active == True).all()
+        events = Event.query.filter(Event.is_active == False).order_by("time_event_start")\
+            .paginate(page, events_per_page, True)
     elif request.args.get('col') == 'active' and request.args.get('dir') == 'yes':
-        events = Event.query.filter(Event.is_active == True).all() + Event.query.filter(Event.is_active == False).all()
+        events = Event.query.filter(Event.is_active == True).order_by("time_event_start")\
+            .paginate(page, events_per_page, True)
     else:
         abort(404)
-    return render_template('admin/events.html', events=events, title='Events')
+
+    # URLs for pagination navigation
+    next_url = url_for('admin_bp.events',
+                       col=request.args.get('col', 'start'),
+                       dir=request.args.get('dir', 'asc'),
+                       page=events.next_num) if events.has_next else None
+    prev_url = url_for('admin_bp.events',
+                       col=request.args.get('col', 'start'),
+                       dir=request.args.get('dir', 'asc'),
+                       page=events.prev_num) if events.has_prev else None
+
+    return render_template('admin/events.html',
+                           events=events,
+                           title='Events', next_url=next_url,
+                           prev_url=prev_url,
+                           events_per_page=events_per_page)
 
 
 @admin_bp.route('/event/<int:event_id>', methods=['GET', 'POST'])
@@ -167,8 +192,29 @@ def users():
     """
     List user's data from db in Admin Portal.
     """
-    users = User.query.order_by(func.lower(User.username).asc()).all()
-    return render_template('admin/users.html', users=users, title='Users')
+
+    # Pagination
+    users_per_page = 10
+    page = request.args.get('page', 1, type=int)
+
+    # Remember current url in session (for back-redirect)
+    session['prev_endpoint'] = url_for('admin_bp.users',
+                                       page=request.args.get('page'))
+
+    users = User.query.order_by(func.lower(User.username).asc()).paginate(page, users_per_page, True)
+
+    # URLs for pagination navigation
+    next_url = url_for('admin_bp.users',
+                       page=users.next_num) if users.has_next else None
+    prev_url = url_for('admin_bp.users',
+                       page=users.prev_num) if users.has_prev else None
+
+    return render_template('admin/users.html',
+                           users=users,
+                           title='Users',
+                           prev_url=prev_url,
+                           next_url=next_url,
+                           users_per_page=users_per_page)
 
 
 def check_user_exist(request, user_edited=None):
@@ -193,11 +239,13 @@ def check_user_exist(request, user_edited=None):
     if user_exist or email_exist:
         access_from_form = True if request.form.get('access') == 'True' else False
         roleid_from_form = request.form.get('role')
+        pass_reset_from_form = True if request.form.get('pass_reset') == 'True' else False
         form_content = {
             'username': username_from_form,
             'email': email_from_form,
             'access': access_from_form,
-            'roleid': True if roleid_from_form == 'admin' else False
+            'roleid': True if roleid_from_form == 'admin' else False,
+            'pass_reset': pass_reset_from_form,
         }
         if user_exist and email_exist:
             flash(f'Sorry! Username "{username_from_form}" and email "{email_from_form}" are already taken. '
@@ -227,6 +275,7 @@ def new_user():
         user = User(username=request.form.get('username'),
                     email=request.form.get('email'),
                     access_granted=True if request.form.get('access') == 'True' else False,
+                    pass_change_req=True if request.form.get('pass_reset') == 'True' else False,
                     role_id=str(Role.query.filter_by(name=request.form.get('role')).first().id))
         if request.form.get('password'):
             user.set_password(request.form.get('password'))
@@ -264,9 +313,10 @@ def user(user_id):
         user.access_granted = True if request.form.get('access') == 'True' else False
         user.pass_change_req = True if request.form.get('pass_reset') == 'True' else False
         user.role_id = str(Role.query.filter_by(name=request.form.get('role')).first().id)
-        # check if password has been changed
-        # if request.form.password and not user.check_password(request.form.password):
-        #     user.set_password(request.form.password)
+        # Check whether password has been changed
+        user_pass_form = request.form.get('password')
+        if user_pass_form and not user.check_password(user_pass_form):
+            user.set_password(user_pass_form)
         db.session.commit()
         current_app.logger_admin.info(f'User "{user.username}" data has been changed')
         flash('Your changes have been saved!', 'success')
@@ -322,6 +372,9 @@ def act_event(event_id):
         event.is_active = True
         db.session.commit()
         flash(f'Event with title "{event.title}" has been activated!', 'success')
+    # Redirect to previous URL
+    if 'prev_endpoint' in session:
+        return redirect(session['prev_endpoint'])
     return redirect(url_for('admin_bp.events'))
 
 
@@ -431,22 +484,36 @@ def logs():
     """
     List logs.
     """
-    if not request.args or (request.args.get('col') == 'date' and request.args.get('dir') == 'desc'):
-        logs = Log.query.order_by(desc(Log.time)).all()
+    logs_per_page = 12
+    page = request.args.get('page', 1, type=int)
+    if not request.args or (request.args.get('col') == 'time' and request.args.get('dir') == 'desc'):
+        logs = Log.query.order_by(desc(Log.time)).paginate(page, logs_per_page, False)
     elif request.args.get('col') == 'time' and request.args.get('dir') == 'desc':
-        logs = Log.query.order_by(desc(Log.time)).all()
+        logs = Log.query.order_by(desc(Log.time)).paginate(page, logs_per_page, False)
     elif request.args.get('col') == 'time' and request.args.get('dir') == 'asc':
-        logs = Log.query.order_by(asc(Log.time)).all()
+        logs = Log.query.order_by(asc(Log.time)).paginate(page, logs_per_page, False)
     elif request.args.get('col') == 'log_name' and request.args.get('dir') == 'desc':
-        logs = Log.query.order_by(desc(Log.log_name)).all()
+        logs = Log.query.order_by(desc(Log.log_name)).paginate(page, logs_per_page, False)
     elif request.args.get('col') == 'log_name' and request.args.get('dir') == 'asc':
-        logs = Log.query.order_by(asc(Log.log_name)).all()
+        logs = Log.query.order_by(asc(Log.log_name)).paginate(page, logs_per_page, False)
     elif request.args.get('col') == 'level' and request.args.get('dir') == 'asc':
-        logs = Log.query.order_by(asc(Log.level)).all()
+        logs = Log.query.order_by(asc(Log.level)).paginate(page, logs_per_page, False)
     elif request.args.get('col') == 'level' and request.args.get('dir') == 'desc':
-        logs = Log.query.order_by(desc(Log.level)).all()
+        logs = Log.query.order_by(desc(Log.level)).paginate(page, logs_per_page, False)
     else:
         abort(404)
 
+    next_url = url_for('admin_bp.logs',
+                       col=request.args.get('col', 'time'),
+                       dir=request.args.get('dir', 'desc'),
+                       page=logs.next_num) if logs.has_next else None
+    prev_url = url_for('admin_bp.logs',
+                       col=request.args.get('col', 'time'),
+                       dir=request.args.get('dir', 'desc'),
+                       page=logs.prev_num) if logs.has_prev else None
 
-    return render_template('admin/logs.html', logs=logs)
+    return render_template('admin/logs.html',
+                           logs=logs,
+                           next_url=next_url,
+                           prev_url=prev_url,
+                           logs_per_page=logs_per_page)

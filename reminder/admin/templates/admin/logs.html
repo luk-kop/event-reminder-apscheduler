@@ -25,9 +25,9 @@
                 {% elif request.args.get('col') == 'time' and request.args.get('dir') == 'asc' %}
                 <a style="color: inherit;" href="{{ url_for('admin_bp.logs', col='time', dir='desc') }}">Log timestamp  <span data-feather="chevron-up"></span></a>
                 {% elif not request.args %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.logs', col='time', dir='desc') }}">Log timestamp  <span data-feather="chevron-up"></span></a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.logs', col='time', dir='asc') }}">Log timestamp  <span data-feather="chevron-down"></span></a>
                 {% else %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.logs', col='time', dir='desc') }}">Log timestamp</span></a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.logs', col='time', dir='desc') }}">Log timestamp</a>
                 {% endif %}
             </th>
             <th class="align-middle">
@@ -45,7 +45,7 @@
                 {% elif request.args.get('col') == 'stop' and request.args.get('dir') == 'desc' %}
                 <a style="color: inherit;" href="{{ url_for('admin_bp.logs', col='level', dir='asc') }}">Log level  <span data-feather="chevron-down"></span></a>
                 {% else %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.logs', col='level', dir='asc') }}">Log level</span></a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.logs', col='level', dir='asc') }}">Log level</a>
                 {% endif %}
             </th>
             <th class="align-middle">
@@ -54,9 +54,9 @@
         </tr>
         </thead>
         <tbody>
-        {% for log in logs %}
+        {% for log in logs.items %}
             <tr class="align-middle">
-                <th class="align-middle" scope="row">{{ loop.index }}</th>
+                <th class="align-middle" scope="row">{{ loop.index + logs_per_page * (request.args.get('page', '1')|int - 1) }}</th>
                 <td class="align-middle">
                     {{ log.time.strftime('%Y-%m-%d %H:%M:%S') }}
                 </td>
@@ -68,11 +68,42 @@
                 <td class="align-middle" width="40%">
                     {{ log.msg }}
                 </td>
-        </tr>
-
+            </tr>
         {% endfor %}
         </tbody>
     </table>
 
+<nav aria-label="...">
+    <ul class="pagination">
+                <li class="page-item {{ 'disabled' if not prev_url }}">
+            <a class="page-link" href="{{ prev_url }}" tabindex="-1">Previous</a>
+        </li>
+        {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if page_num %}
+            {% if logs.page == page_num %}
+                <li class="page-item active">
+                    {% if not request.args %}
+                        <a class="page-link" href="{{ url_for('admin_bp.logs', col='time', dir='desc', page=page_num) }}">{{ page_num }} <span class="sr-only">(current)</span></a>
+                    {% else %}
+                        <a class="page-link" href="{{ url_for('admin_bp.logs', col=request.args.get('col'), dir=request.args.get('dir'), page=page_num) }}">{{ page_num }} <span class="sr-only">(current)</span></a>
+                    {% endif %}
+                </li>
+            {% else %}
+                {% if not request.args %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('admin_bp.logs', col='time', dir='desc', page=page_num) }}">{{ page_num }}</a></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('admin_bp.logs', col=request.args.get('col'), dir=request.args.get('dir'), page=page_num) }}">{{ page_num }}</a></li>
+                {% endif %}
+        {% endif %}
+
+        {% else %}
+            <li class="page-item"><a class="page-link">...</a></li>
+        {% endif %}
+        {% endfor %}
+                <li class="page-item {{ 'disabled' if not next_url }}">
+            <a class="page-link" href="{{ next_url }}">Next</a>
+        </li>
+    </ul>
+</nav>
 
 {% endblock body %}
