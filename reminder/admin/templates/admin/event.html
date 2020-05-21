@@ -6,38 +6,32 @@
 {% endblock %}
 
 {% block body %}
-<!--
-<ul class="list-group col-md-5 mb-3">
-    <h6>
-    <li class="list-group-item"><strong>Author:</strong> {{ event.author }}</li>
-    </h6>
-</ul>
--->
+<div class="container">
 <div class="form-row">
-        <div class="input-group col-md-3 mb-3">
+        <div class="input-group col-md-4 mb-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Date of creation</span>
             </div>
-            <p class="form-control">{{ event.time_creation.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="form-control text-center">{{ event.time_creation.strftime('%Y-%m-%d %H:%M') }}</p>
         </div>
-        <div class="input-group col-md-3 mb-3">
+        <div class="input-group col-md-4 mb-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Author</span>
             </div>
-            <p class="form-control">{{ event.author }}</p>
+            <p class="form-control text-center">{{ event.author }}</p>
         </div>
 </div>
 
 <form action="" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <div class="form-row">
-        <div class="col-md-5 mb-3">
+        <div class="col-md-6 mb-3">
             <label for="id-title">Title</label>
             <input type="text" class="form-control" placeholder="Event's title" value="{{ event.title }}" id="id-title" name="title" width="60" min="1" max="40" required>
         </div>
-        <div class="col-md-2 mb-3">
+        <div class="col-md-4 mb-3">
             <label for="id-allday">All day event?</label>
-            <select id="id-allday" class="form-control col-md-6" name="allday">
+            <select id="id-allday" style="text-align-last: center" class="form-control col-md-6" name="allday">
                 {% if event.all_day_event %}
                 <option value="True" selected>Yes</option>
                 <option value="False">No</option>
@@ -50,7 +44,7 @@
     </div>
     <label for="id-row_event_date">Time of event</label>
     <div class="form-row" id="id-row_event_date">
-        <div class="input-group mb-3 col-md-5" id="id-date_time_event_start">
+        <div class="input-group mb-3 col-md-6" id="id-date_time_event_start">
             <div class="input-group-prepend">
                 <span class="input-group-text">Event start</span>
             </div>
@@ -63,7 +57,7 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="input-group mb-3 col-md-5" id="id-date_time_event_stop">
+        <div class="input-group mb-3 col-md-6" id="id-date_time_event_stop">
             <div class="input-group-prepend">
                 <span class="input-group-text">Event stop</span>
             </div>
@@ -77,7 +71,7 @@
     </div>
 
     <div class="form-row">
-        <div class="input-group mb-3 col-md-7">
+        <div class="input-group mb-3 col-md-8">
             <div class="input-group-prepend">
                 <span class="input-group-text">Details</span>
             </div>
@@ -90,7 +84,7 @@
             <div class="input-group-prepend">
                 <span class="input-group-text">Notify?</span>
             </div>
-            <select class="form-control" id="id-to_notify" name="to_notify">
+            <select class="form-control" style="text-align-last: center" id="id-to_notify" name="to_notify">
                 {% if event.to_notify %}
                 <option value="True" selected>Yes</option>
                 <option value="False">No</option>
@@ -100,7 +94,7 @@
                 {% endif %}
             </select>
         </div>
-        <div class="input-group col-md-5" id="id-date_time_notify">
+        <div class="input-group col-md-6" id="id-date_time_notify">
             <div class="input-group-prepend">
                 <span class="input-group-text">Reminder date</span>
             </div>
@@ -117,12 +111,12 @@
     </div>
 
     <div class="form-row">
-        <div class="input-group mb-3 col-md-4">
+        <div class="input-group mb-3 col-md-5">
             <div class="input-group-prepend">
                 <span class="input-group-text">Users to notify</span>
             </div>
             {% if event.to_notify %}
-            <select class="form-control" id="id-notified_user" name="notified_user" multiple size="3" required>
+            <select class="form-control" style="text-align-last: center" id="id-notified_user" name="notified_user" multiple size="3" required>
                 {% for user in users %}
                 {% if user in event.notified_uids %}
                 <option value="{{ user.id }}" selected>{{ user.username }}</option>
@@ -142,11 +136,11 @@
     </div>
 
     <div class="form-row mb-4">
-        <div class="input-group col-md-3">
+        <div class="input-group col-md-4">
             <div class="input-group-prepend">
                 <span class="input-group-text">Notification already sent?</span>
             </div>
-            <select class="form-control" id="id-notify_sent" name="notify_sent">
+            <select class="form-control" style="text-align-last: center" id="id-notify_sent" name="notify_sent">
                 {% if event.notification_sent %}
                 <option value="True" selected>Yes</option>
                 <option value="False">No</option>
@@ -161,7 +155,7 @@
     <input class="btn btn-primary" type="submit" value="Submit">
     <input type="submit" class="btn btn-danger" name="cancel-btn" value="Cancel" formnovalidate>
 </form>
-
+</div>
 {% endblock %}
 
 {% block scripts %}

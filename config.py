@@ -8,13 +8,14 @@ class Config:
     """
     # General Config
     SECRET_KEY = os.environ.get('SECRET_KEY')
+    # If LOGIN_DISABLED = True - it globally turn off authentication (when unit testing)
+    LOGIN_DISABLED = os.environ.get('LOGIN_DISABLED') or False
     JSONIFY_PRETTYPRINT_REGULAR = True
     BASE_DIR = Path(__file__).resolve().parent
     LOGS_DIR = BASE_DIR.joinpath('logs')
-    EVENTS_PER_PAGE = 5
-    # REDIS_URL = os.envirom.get('REDIS_URL') or 'redis://'
+    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
     # Cookies lifetime is 1800 sek (30 min).
-    # PERMANENT_SESSION_LIFETIME = 1800
+    PERMANENT_SESSION_LIFETIME = 1800
 
     # Database Config
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'

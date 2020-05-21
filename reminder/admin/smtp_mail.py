@@ -1,5 +1,4 @@
 from flask import current_app, render_template, flash
-from flask_login import current_user
 import smtplib
 from email.message import EmailMessage
 
@@ -79,14 +78,12 @@ def test_email():
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
                 smtp_obj.login(mail_sender, mail_pass)
-                # flash('Connection with mail server established correctly! The notify service is running!', 'success')
                 return True
         elif mail_security == 'ssl':
             with smtplib.SMTP_SSL(host=mail_server, port=mail_port, timeout=5) as smtp_obj:
                 # smtp_obj.set_debuglevel(1)
                 smtp_obj.ehlo()
                 smtp_obj.login(mail_sender, mail_pass)
-                # flash('Connection with mail server established correctly! The notify service is running!', 'success')
                 return True
     except smtplib.SMTPAuthenticationError:
         flash('Connection issue. Check your credentials!', 'danger')

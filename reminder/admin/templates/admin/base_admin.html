@@ -102,6 +102,7 @@
     ('admin_bp.new_user', 'new_user', 'user-plus', 'New user'),
     ('admin_bp.events', 'events', 'database', 'Events'),
     ('admin_bp.notify', 'notify', 'youtube', 'Notification service'),
+    ('admin_bp.search_engine', 'search_engine', 'search', 'Search engine'),
     ('admin_bp.logs', 'logs', 'file-text', 'Logs'),
     ] -%}
     {% set active_page = active_page|default('users') -%}
@@ -129,7 +130,7 @@
             </nav>
 
             <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">
                         {% block pagehead %}{% endblock %}
                     </h1>

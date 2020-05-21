@@ -1,0 +1,84 @@
+{% extends 'admin/base_admin.html' %}
+{% set active_page = "search_engine" %}
+
+{% block pagehead %}
+    Search engine
+{% endblock %}
+
+{% block body %}
+<!-- div for mail test -->
+<div id="alerts"></div>
+<div class="container">
+<form action="" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <label for="id-search_status">ElasticSearch info</label>
+    <div class="form-row">
+        <div class="input-group col-md-6 mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Service connection status</span>
+            </div>
+            {% if search_service_status %}
+                <div class="form-control bg-success text-center text-white" id="id-search_status">
+                    Connected
+                </div>
+            {% else %}
+                <div class="form-control bg-danger text-center text-white" id="id-search_status">
+                    Not connected
+                </div>
+            {% endif %}
+        </div>
+        <div class="input-group col-md-6 mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Service URL</span>
+            </div>
+            <div class="form-control">
+                <center>{{ search_url if search_url else 'No data' }}</center>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-row mb-3">
+        <div class="input-group col-md-6 mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text">ElasticSearch version</span>
+            </div>
+            <div class="form-control">
+                <center>{{ search_service_version }}</center>
+            </div>
+        </div>
+        <div class="input-group col-md-6 mb-3" id="id-date_time_notify">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Build type</span>
+            </div>
+            <div class="form-control">
+                <center>{{ search_service_build_type }}</center>
+            </div>
+        </div>
+    </div>
+    {% if search_service_status %}
+        <input class="btn btn-primary" type="submit" onclick="addAlert()" id="id-reindex_btn" value="Reindex">
+    {% else %}
+        <input class="btn btn-primary disabled" type="submit" onclick="addAlert()" id="id-reindex_btn" value="Reindex" disabled>
+    {% endif %}
+    <input type="submit" class="btn btn-danger" name="cancel-btn" value="Cancel" formnovalidate>
+
+</form>
+</div>
+{% endblock body %}
+
+{% block scripts %}
+<script type='text/javascript'>
+function addAlert() {
+    var reindex_button = document.getElementById("id-reindex_btn");
+    if (reindex_button.onclick) {
+        $('#alerts').append(
+            '<div class="alert alert-warning alert-dismissible fade show text-center" role="alert">' +
+                        'The reindexing search engine in progress...' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true">&times;</span>' +
+                        '</button>' +
+                    '</div>');
+    }
+}
+</script>
+{% endblock scripts %}

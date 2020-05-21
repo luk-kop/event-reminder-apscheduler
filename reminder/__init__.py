@@ -5,6 +5,7 @@ from logging.handlers import RotatingFileHandler
 
 # Third party imports
 from flask import Flask
+from elasticsearch import Elasticsearch
 
 # Local app imports
 from config import Config
@@ -19,6 +20,7 @@ from reminder.extensions import (
     scheduler,
 )
 from reminder.custom_handler import DatabaseHandler
+from reminder.models import Event
 
 
 def create_app():
@@ -40,7 +42,7 @@ def register_extensions(app):
     Register Flask extensions.
     """
     # Initialize Plugins
-    # Create SQLAlchemy instance:
+    # create SQLAlchemy instance:
     db.init_app(app)
     # enable CSRF protection globally for Flask app
     csrf.init_app(app)
@@ -55,6 +57,8 @@ def register_extensions(app):
     if not scheduler.running:
         scheduler.init_app(app)
         scheduler.start()
+    # initialize ElasticSearch
+    app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) if app.config['ELASTICSEARCH_URL'] else None
 
 
 def register_blueprints(app):

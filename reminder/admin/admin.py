@@ -1,31 +1,23 @@
 import datetime
+import json
+import time
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, session
 from flask_login import current_user, login_required
-from functools import wraps
 from sqlalchemy import func, desc, asc
+import requests
+import elasticsearch.exceptions
 
 from reminder.extensions import db, scheduler
 from reminder.models import Role, User, Event, Notification, Log
 from reminder.main import main
 from reminder.admin import smtp_mail
+from reminder.custom_decorators import admin_required, login_required, cancel_click
 
 
 admin_bp = Blueprint('admin_bp', __name__,
                      template_folder='templates',
                      static_folder='static')
-
-
-def admin_required(func):
-    """
-    Decorator check if current user has admin privileges.
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if not current_user.is_admin():
-            abort(403)
-        return func(*args, **kwargs)
-    return wrapper
 
 
 def background_job():
@@ -60,9 +52,6 @@ def update_last_seen():
     """
     Update when the current user was last seen (User.last_seen attribute).
     """
-    #print(scheduler.running)
-    if request.method == "POST":    # only for tests
-        print(f'\n{request.form}\n')
     if current_user.is_authenticated:
         current_user.user_seen()
         db.session.commit()
@@ -76,14 +65,9 @@ def events():
     Display all events from db in Admin Portal.
     """
     # Pagination
-    events_per_page = 12
+    events_per_page = 10
     page = request.args.get('page', 1, type=int)
 
-    # Remember current url in session (for back-redirect)
-    session['prev_endpoint'] = url_for('admin_bp.events',
-                                  col=request.args.get('col'),
-                                  dir=request.args.get('dir'),
-                                  page=request.args.get('page'))
     if not request.args or (request.args.get('col') == 'start' and request.args.get('dir') == 'asc'):
         events = Event.query.order_by("time_event_start").paginate(page, events_per_page, True)
     elif request.args.get('col') == 'id' and request.args.get('dir') == 'desc':
@@ -116,7 +100,22 @@ def events():
             .paginate(page, events_per_page, True)
     else:
         abort(404)
-
+    # Remember additional URL in session, if last event on page - for event deleting feature
+    if session.get('prev_endpoint_del'):
+        del session['prev_endpoint_del']
+    if len(events.items) == 1 and not page == 1:
+        session['prev_endpoint_del'] = url_for('admin_bp.events',
+                                           col=request.args.get('col'),
+                                           dir=request.args.get('dir'),
+                                           page=page - 1)
+    # Remember current url in session (for back-redirect)
+    if not request.args:
+        session['prev_endpoint'] = url_for('admin_bp.events')
+    else:
+        session['prev_endpoint'] = url_for('admin_bp.events',
+                                           col=request.args.get('col'),
+                                           dir=request.args.get('dir'),
+                                           page=page)
     # URLs for pagination navigation
     next_url = url_for('admin_bp.events',
                        col=request.args.get('col', 'start'),
@@ -126,7 +125,6 @@ def events():
                        col=request.args.get('col', 'start'),
                        dir=request.args.get('dir', 'asc'),
                        page=events.prev_num) if events.has_prev else None
-
     return render_template('admin/events.html',
                            events=events,
                            title='Events', next_url=next_url,
@@ -135,6 +133,7 @@ def events():
 
 
 @admin_bp.route('/event/<int:event_id>', methods=['GET', 'POST'])
+@cancel_click()
 @login_required
 @admin_required
 def event(event_id):
@@ -146,12 +145,7 @@ def event(event_id):
     # Fetch users that can be notified (only with user role)
     users_to_notify = User.query.filter_by(role_id=2).all()
     today = datetime.date.today().strftime("%Y-%m-%d")
-
     if request.method == "POST":
-        # If a "Cancel" button has been pressed.
-        if request.form.get('cancel-btn') == 'Cancel':
-            return redirect(url_for('admin_bp.events'))
-
         event.title = request.form.get('title')
         event.details = request.form.get('details')
         event.all_day_event = True if request.form.get('allday') == 'True' else False
@@ -162,7 +156,6 @@ def event(event_id):
         else:
             event.time_notify = None
         event.notification_sent = True if request.form.get('notify_sent') == 'True' else False
-
         # Check if event ia all_day event or not.
         if request.form.get('time_event_start'):
             time_event_start_db = main.str_to_datetime(request.form.get('date_event_start'),
@@ -174,13 +167,14 @@ def event(event_id):
             time_event_stop_db = main.str_to_datetime(request.form.get('date_event_stop'))
         event.time_event_start = time_event_start_db
         event.time_event_stop = time_event_stop_db
-
         # Set users to notify. If "to_notify = False" the list "user_form" is []
         users_form = request.form.getlist('notified_user')
         # Overwrite current users to notify.
         event.notified_uids = [User.query.get(user_id) for user_id in users_form]
         db.session.commit()
         flash('Your changes have been saved!', 'success')
+        if 'prev_endpoint' in session:
+            return redirect(session['prev_endpoint'])
         return redirect(url_for('admin_bp.events'))
     return render_template('admin/event.html', event=event, title='Event details', users=users_to_notify, today=today)
 
@@ -196,13 +190,11 @@ def users():
     # Pagination
     users_per_page = 10
     page = request.args.get('page', 1, type=int)
-
     # Remember current url in session (for back-redirect)
     session['prev_endpoint'] = url_for('admin_bp.users',
                                        page=request.args.get('page'))
 
     users = User.query.order_by(func.lower(User.username).asc()).paginate(page, users_per_page, True)
-
     # URLs for pagination navigation
     next_url = url_for('admin_bp.users',
                        page=users.next_num) if users.has_next else None
@@ -225,7 +217,6 @@ def check_user_exist(request, user_edited=None):
     username_from_form = request.form.get('username')
     email_from_form = request.form.get('email')
     user_exist, email_exist = None, None
-
     if user_edited:
         # When the user is edited
         if user_edited.username != username_from_form:
@@ -258,6 +249,7 @@ def check_user_exist(request, user_edited=None):
 
 
 @admin_bp.route('/new_user', methods=['GET', 'POST'])
+@cancel_click('admin_bp.users')
 @login_required
 @admin_required
 def new_user():
@@ -265,9 +257,6 @@ def new_user():
     Add new user to db.
     """
     if request.method == "POST":
-        # If a "Cancel" button has been pressed.
-        if request.form.get('cancel-btn') == 'Cancel':
-            return redirect(url_for('admin_bp.users'))
         # Check if username and email already exist in db.
         form_content = check_user_exist(request)
         if form_content:
@@ -290,6 +279,7 @@ def new_user():
 
 
 @admin_bp.route('/user/<int:user_id>', methods=['GET', 'POST'])
+@cancel_click()
 @login_required
 @admin_required
 def user(user_id):
@@ -298,14 +288,10 @@ def user(user_id):
     """
     user = User.query.filter_by(id=user_id).first_or_404()
     if request.method == "POST":
-        # If a "Cancel" button has been pressed.
-        if request.form.get('cancel-btn') == 'Cancel':
-            return redirect(url_for('admin_bp.users'))
         # Check if new assigned username or email exist in db.
         form_content = check_user_exist(request, user)
         if form_content:
             return render_template('admin/user.html', user=user)
-
         user.username = request.form.get('username')
         user.email = request.form.get('email')
         if request.form.get('access') == 'True' and str(user.access_granted) != request.form.get('access'):
@@ -339,6 +325,8 @@ def del_user(user_id):
     db.session.delete(user)
     db.session.commit()
     flash(f'User "{user.username}" has been deleted!', 'success')
+    if 'prev_endpoint' in session:
+        return redirect(session['prev_endpoint'])
     return redirect(url_for('admin_bp.users'))
 
 
@@ -353,6 +341,13 @@ def del_event(event_id):
     db.session.delete(event)
     db.session.commit()
     flash(f'Event with title "{event.title}" has been permanently deleted!', 'success')
+    # Custom small delay when deleting search results from db (for elasticsearch better performance)
+    if 'search' in session.get('prev_endpoint'):
+        time.sleep(1)
+    if session.get('prev_endpoint_del'):
+        return redirect(session.get('prev_endpoint_del'))
+    elif session.get('prev_endpoint'):
+        return redirect(session['prev_endpoint'])
     return redirect(url_for('admin_bp.events'))
 
 
@@ -379,6 +374,7 @@ def act_event(event_id):
 
 
 @admin_bp.route('/notify/', methods=['GET', 'POST'])
+@cancel_click('admin_bp.users')
 @login_required
 @admin_required
 def notify():
@@ -389,19 +385,14 @@ def notify():
     notification_config = Notification.query.first()
     # Mail config data.
     notify_config = {
-        'mail_server': current_app.config['MAIL_SERVER'],
-        'mail_port': current_app.config['MAIL_PORT'],
-        'mail_security': current_app.config['MAIL_SECURITY'],
-        'mail_username': current_app.config['MAIL_USERNAME'],
+        'mail_server': current_app.config.get('MAIL_SERVER'),
+        'mail_port': current_app.config.get('MAIL_PORT'),
+        'mail_security': current_app.config.get('MAIL_SECURITY'),
+        'mail_username': current_app.config.get('MAIL_USERNAME'),
         'notify_unit': notification_config.notify_unit,
         'notify_interval': notification_config.notify_interval,
     }
-
     if request.method == "POST":
-        # If a "Cancel" button has been pressed.
-        if request.form.get('cancel-btn') == 'Cancel':
-            return redirect(url_for('admin_bp.users'))
-
         # Fetch data from form.
         notify_status_form = request.form.get('notify_status')
         notify_unit_form = request.form.get('notify_unit')
@@ -411,7 +402,6 @@ def notify():
         mail_security_form = request.form.get('mail_security')
         mail_username_form = request.form.get('mail_username')
         mail_password_form = request.form.get('mail_password')
-
         # Update the data in 'notify_config' div and config object (if required).
         if mail_server_form != notify_config['mail_server']:
             current_app.config['MAIL_SERVER'] = mail_server_form
@@ -427,17 +417,14 @@ def notify():
             notify_config['mail_username'] = mail_username_form
         if mail_password_form:
             current_app.config['MAIL_PASSWORD'] = mail_password_form
-
         # check weather some scheduler jobs exist
         # if scheduler.running:
         # print(scheduler.get_jobs())
-
         # Test mail configuration before running service
         if notify_status_form == 'on':
             test_mail_config = smtp_mail.test_email()
         else:
             test_mail_config = False
-
         # Test mail configuration before running service.
         if not notify_status_form and scheduler.get_jobs():
             scheduler.remove_job('my_job_id')
@@ -449,7 +436,8 @@ def notify():
             if not scheduler.get_jobs():
                 current_app.logger_admin.info(f'Notification service has been started by "{current_user.username}"')
             else:
-                current_app.logger_admin.info(f'Notification service config has been changed by "{current_user.username}"')
+                current_app.logger_admin.info(f'Notification service config has been changed by '
+                                              f'"{current_user.username}"')
             if notify_unit_form == 'seconds':
                 scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
                                   seconds=int(notify_interval_form), id='my_job_id')
@@ -460,15 +448,14 @@ def notify():
                 scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
                                   hours=int(notify_interval_form), id='my_job_id')
             flash('Connection with mail server established correctly! The notify service is running!', 'success')
-
         # Save notification settings to db.
         if notify_unit_form != notify_config['notify_unit'] or notify_interval_form != notify_config['notify_interval']:
             notification_config.notify_unit = notify_unit_form
             notification_config.notify_interval = int(notify_interval_form)
             db.session.commit()
             if not scheduler.get_jobs():
-                current_app.logger_admin.info(f'Notification service config has been changed by "{current_user.username}"')
-
+                current_app.logger_admin.info(f'Notification service config has been changed by '
+                                              f'"{current_user.username}"')
         # Update the rest of the data in 'notify_config' dic.
         notify_config['notify_unit'] = notify_unit_form
         notify_config['notify_interval'] = notify_interval_form
@@ -487,21 +474,28 @@ def logs():
     logs_per_page = 12
     page = request.args.get('page', 1, type=int)
     if not request.args or (request.args.get('col') == 'time' and request.args.get('dir') == 'desc'):
-        logs = Log.query.order_by(desc(Log.time)).paginate(page, logs_per_page, False)
+        logs = Log.query.order_by(desc(Log.time)).paginate(page, logs_per_page, True)
     elif request.args.get('col') == 'time' and request.args.get('dir') == 'desc':
-        logs = Log.query.order_by(desc(Log.time)).paginate(page, logs_per_page, False)
+        logs = Log.query.order_by(desc(Log.time)).paginate(page, logs_per_page, True)
     elif request.args.get('col') == 'time' and request.args.get('dir') == 'asc':
-        logs = Log.query.order_by(asc(Log.time)).paginate(page, logs_per_page, False)
+        logs = Log.query.order_by(asc(Log.time)).paginate(page, logs_per_page, True)
     elif request.args.get('col') == 'log_name' and request.args.get('dir') == 'desc':
-        logs = Log.query.order_by(desc(Log.log_name)).paginate(page, logs_per_page, False)
+        logs = Log.query.order_by(desc(Log.log_name)).paginate(page, logs_per_page, True)
     elif request.args.get('col') == 'log_name' and request.args.get('dir') == 'asc':
-        logs = Log.query.order_by(asc(Log.log_name)).paginate(page, logs_per_page, False)
+        logs = Log.query.order_by(asc(Log.log_name)).paginate(page, logs_per_page, True)
     elif request.args.get('col') == 'level' and request.args.get('dir') == 'asc':
-        logs = Log.query.order_by(asc(Log.level)).paginate(page, logs_per_page, False)
+        logs = Log.query.order_by(asc(Log.level)).paginate(page, logs_per_page, True)
     elif request.args.get('col') == 'level' and request.args.get('dir') == 'desc':
-        logs = Log.query.order_by(desc(Log.level)).paginate(page, logs_per_page, False)
+        logs = Log.query.order_by(desc(Log.level)).paginate(page, logs_per_page, True)
     else:
         abort(404)
+
+    if not request.args:
+        session['prev_endpoint'] = url_for('admin_bp.logs')
+    else:
+        session['prev_endpoint'] = url_for('admin_bp.logs',
+                                           col=request.args.get('col'),
+                                           page=page)
 
     next_url = url_for('admin_bp.logs',
                        col=request.args.get('col', 'time'),
@@ -517,3 +511,108 @@ def logs():
                            next_url=next_url,
                            prev_url=prev_url,
                            logs_per_page=logs_per_page)
+
+
+@admin_bp.route('/search_engine', methods=['GET', 'POST'])
+@cancel_click('admin_bp.users')
+@login_required
+@admin_required
+def search_engine():
+    search_service_status = False if not current_app.elasticsearch or not current_app.elasticsearch.ping() else True
+    search_url = current_app.config.get('ELASTICSEARCH_URL')
+    # Get elasticsearch node info
+    search_config_data = {}
+    if search_service_status:
+        response = requests.get(search_url)
+        search_config_data = json.loads(response.text)
+    if search_config_data.get('version'):
+        search_service_version = search_config_data.get('version').get('number', 'No data')
+        search_service_build_type = search_config_data.get('version').get('build_type', 'No data')
+    else:
+        search_service_version = search_config_data.get('version', 'No data')
+        search_service_build_type = search_config_data.get('version', 'No data')
+    search_config = {
+        'search_url': search_url,
+        'search_service_status': search_service_status,
+        'search_service_version': search_service_version,
+        'search_service_build_type': search_service_build_type,
+    }
+    if request.method == "POST":
+        # Reindex on demand - add all events and logs from the db to the search index in elasticsearch.
+        Event.reindex()
+        Log.reindex()
+        flash(f'Data from database have been reindexed!', 'success')
+    return render_template('admin/search_engine.html', **search_config)
+
+@admin_bp.route('/search')
+@login_required
+@admin_required
+def search():
+    """
+    Search engine for admin blueprint
+    """
+    if not current_app.elasticsearch or not current_app.elasticsearch.ping():
+        flash(f'Sorry! No connection with search engine!', 'danger')
+        return redirect(session.get('prev_endpoint'))
+    # Fetch all current event's authors from db.
+    page = request.args.get('page', 1, type=int)
+    items_per_page = 10
+    try:
+        if request.args.get('sub') == 'events':
+            events, total = Event.search(request.args.get('q'), page, items_per_page)
+            items_on_current_page = events.count()
+        elif request.args.get('sub') == 'logs':
+            logs, total = Log.search(request.args.get('q'), page, items_per_page)
+            items_on_current_page = logs.count()
+        else:
+            abort(404)
+    except (elasticsearch.exceptions.RequestError, TypeError):
+        abort(404)
+    next_url = url_for('admin_bp.search', sub=request.args.get('sub'), q=request.args.get('q'), page=page + 1) \
+        if total > page * items_per_page else None
+    prev_url = url_for('admin_bp.search', sub=request.args.get('sub'), q=request.args.get('q'), page=page - 1) \
+        if page > 1 else None
+    # Pagination for search results
+    page_last = int(total / items_per_page) + 1 if (total / items_per_page % 1) != 0 else int(total / items_per_page)
+    pagination = {
+        'page_first': 1,
+        'page_current': page,
+        'page_last': page_last,
+        'page_prev': page - 1 if page > 1 else None,
+        'page_next': page + 1 if total > page * items_per_page else None,
+        'items_per_page': items_per_page,
+    }
+    # Remember additional URL in session, if there is only one event on page - for event deactivation feature
+    if session.get('prev_endpoint_del'):
+        del session['prev_endpoint_del']
+    if items_on_current_page == 1 and not page == 1:
+        session['prev_endpoint_del'] = url_for('admin_bp.search',
+                                               sub=request.args.get('sub'),
+                                               q=request.args.get('q'),
+                                               page=page - 1)
+    # Remember current url in session (for back-redirect)
+    if not request.args.get('page'):
+        session['prev_endpoint'] = url_for('admin_bp.search',
+                                           sub=request.args.get('sub'),
+                                           q=request.args.get('q'))
+    else:
+        session['prev_endpoint'] = url_for('admin_bp.search',
+                                           sub=request.args.get('sub'),
+                                           q=request.args.get('q'),
+                                           page=request.args.get('page'))
+    if request.args.get('sub') == 'events':
+        return render_template('admin/search.html',
+                               title='Search',
+                               events=events,
+                               total=total,
+                               next_url=next_url,
+                               prev_url=prev_url,
+                               **pagination)
+    elif request.args.get('sub') == 'logs':
+        return render_template('admin/search.html',
+                               title='Search',
+                               logs=logs,
+                               total=total,
+                               next_url=next_url,
+                               prev_url=prev_url,
+                               **pagination)

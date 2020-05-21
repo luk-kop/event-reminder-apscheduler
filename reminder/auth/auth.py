@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
-from flask_login import current_user, login_user, logout_user, login_required
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
+from flask_login import current_user, login_user, logout_user
 from werkzeug.urls import url_parse
 
 from reminder.extensions import db
 from reminder.models import User
 from reminder.forms import LoginForm
+from reminder.custom_decorators import login_required, cancel_click
 
 
 auth_bp = Blueprint('auth_bp', __name__,
@@ -17,8 +18,6 @@ def update_last_seen():
     """
     Update when the current user was last seen (User.last_seen attribute).
     """
-    if request.method == "POST":    # only for tests
-        print(request.form)
     if current_user.is_authenticated:
         current_user.user_seen()
         db.session.commit()
@@ -35,7 +34,8 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         current_app.logger_auth.debug(f'Login attempt: {request.remote_addr}, '
-                                      f'{request.user_agent.platform}, {request.user_agent.browser} {request.user_agent.version}')
+                                      f'{request.user_agent.platform}, {request.user_agent.browser} '
+                                      f'{request.user_agent.version}')
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.access_granted or not user.check_password(form.password.data):
             flash('Login Unsuccessful. Please check username and password', 'danger')
@@ -47,16 +47,17 @@ def login():
                     current_app.logger_auth.warning(f'User "{user.username}" account has been blocked')
                 db.session.commit()
             return redirect(url_for('auth_bp.login'))
-        # below function will register the user as logged in
+        # Below function will register the user as logged in
         login_user(user, remember=form.remember_me.data)
         current_app.logger_auth.info(f'"{user.username}" has been successfully authenticated')
-        # reset login attempts
+        session.permanent = True
+        # Reset login attempts
         user.failed_login_attempts = 0
         db.session.commit()
         if current_user.pass_change_req:
             flash('Please change your password', 'success')
             return redirect(url_for('auth_bp.change_pass'))
-        # next page value obtained from query string
+        # Next page value obtained from query string
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('main_bp.index')
@@ -77,15 +78,13 @@ def logout():
 
 
 @auth_bp.route('/change_pass', methods=['GET', 'POST'])
+@cancel_click('main_bp.index')
 @login_required
 def change_pass():
     """
     Change user password.
     """
     if request.method == "POST":
-        # If a "Cancel" button has been pressed.
-        if request.form.get('cancel-btn') == 'Cancel':
-            return redirect(url_for('main_bp.index'))      # to change
         curr_pass = request.form.get('curr_pass')
         new_pass = request.form.get('password')
         if current_user.check_password(curr_pass):
@@ -110,6 +109,7 @@ def change_pass():
                 flash('Password change has been unsuccessful. Your account has been blocked!', 'danger')
                 return redirect(url_for('main_bp.index'))
             db.session.commit()
-            current_app.logger_auth.warning(f'Failed password change. Current password does not much for "{current_user.username}"')
+            current_app.logger_auth.warning(f'Failed password change. Current password does not much for '
+                                            f'"{current_user.username}"')
             flash('The current password does not match! Please check your password', 'danger')
     return render_template('pass_change.html', title='Change Password')

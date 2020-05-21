@@ -2,7 +2,18 @@
 {% set active_page = "logs" %}
 
 {% block pagehead %}
-    Logs
+<div class="row">
+    <div class="col">
+        Logs
+    </div>
+    <div class="float-right col">
+        <form class="form-inline float-right my-2 my-lg-0" action="{{ url_for('admin_bp.search') }}" method="GET">
+            <input type="hidden" id="id_sub" name="sub" value="logs">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search..." aria-label="Search" name="q" required>
+            <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search</button>
+        </form>
+    </div>
+</div>
 {% endblock pagehead %}
 
 {% block body %}

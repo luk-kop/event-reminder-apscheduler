@@ -7,10 +7,11 @@
 {% endblock %}
 
 {% block body %}
+<div class="container">
 <form action="" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <div class="form-row">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-5 mb-3">
             <label for="id-username">Username</label>
             {% if form_content %}
                 <input type="text" class="form-control" placeholder="Enter username..." value="{{ form_content.username }}" id="id-username" name="username" min="1" max="40" required>
@@ -18,7 +19,7 @@
                 <input type="text" class="form-control" placeholder="Enter username..." id="id-username" name="username" min="1" max="40" required>
             {% endif %}
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-5 mb-3">
             <label for="id-email">Email</label>
             <div class="input-group">
                 <div class="input-group-prepend">
@@ -33,9 +34,9 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="col-md-2 mb-3">
+        <div class="col-md-3 mb-3">
             <label for="id-role">Role</label>
-                <select id="id-role" class="form-control" name="role">
+                <select id="id-role" style="text-align-last: center" class="form-control" name="role">
                 {% if form_content and form_content.roleid %}
                     <option value="admin" selected>Admin</option>
                     <option value="user">User</option>
@@ -45,9 +46,9 @@
                 {% endif %}
                 </select>
         </div>
-        <div class="col-md-2 mb-3">
+        <div class="col-md-3 mb-3">
             <label for="id-access">Can log in?</label>
-            <select id="id-access" class="form-control" name="access">
+            <select id="id-access" style="text-align-last: center" class="form-control" name="access">
                 {% if form_content and not form_content.access %}
                     <option value="True">Yes</option>
                     <option value="False" selected>No</option>
@@ -57,9 +58,9 @@
                 {% endif %}
             </select>
         </div>
-        <div class="col-md-2 mb-3">
+        <div class="col-md-3 mb-3">
             <label for="id-pass_reset">Change password on next login?</label>
-            <select id="id-pass_reset" class="form-control" name="pass_reset">
+            <select id="id-pass_reset" style="text-align-last: center" class="form-control" name="pass_reset">
                 {% if form_content and form_content.pass_reset %}
                     <option value="True" selected>Yes</option>
                     <option value="False">No</option>
@@ -71,11 +72,11 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-5 mb-3">
             <label for="id-password">Password</label>
             <input type="password" class="form-control" placeholder="New password..." id="id-password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Password must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" name="password" min="0" max="40">
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-5 mb-3">
             <label for="id-password2">Confirm password</label>
             <input type="password" class="form-control" placeholder="Confirm your password..." id="id-password2" name="password2" min="0" max="40">
         </div>
@@ -84,7 +85,7 @@
     <input type="submit" class="btn btn-danger" name="cancel-btn" value="Cancel" formnovalidate>
     <!-- <button type="button" class="btn btn-danger" onclick="window.history.back();">Cancel</button> -->
 </form>
-
+</div>
 {% endblock %}
 
 {% block scripts %}

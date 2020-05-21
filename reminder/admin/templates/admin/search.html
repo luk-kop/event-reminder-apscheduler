@@ -1,0 +1,214 @@
+{% extends 'admin/base_admin.html' %}
+{% if request.args.get('sub') == 'events' %}
+    {% set active_page = 'events' %}
+{% elif request.args.get('sub') == 'logs' %}
+    {% set active_page = 'logs' %}
+{% endif %}
+
+{% block pagehead %}
+<div class="row">
+    <div class="col">
+        {{ 'List of events' if request.args.get('sub') == 'events' else 'Logs' }}
+    </div>
+    <div class="float-right col">
+        <form class="form-inline float-right my-2 my-lg-0" action="{{ url_for('admin_bp.search') }}" method="GET">
+            <input type="hidden" id="id_sub" name="sub" value="{{ request.args.get('sub') }}">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search..." aria-label="Search" name="q" value="{{ request.args.get('q') }}" required>
+            <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+{% if request.args.get('sub') == 'events' %}
+<div class="row">
+    <div class="col-sm-12 col-md-6">
+
+    </div>
+    <div class="col-sm-12 col-md-6">
+
+    </div>
+</div>
+    {% if not total %}
+        <div class="cover-container d-flex h-100 p-3 mx-auto flex-column">
+            <img src="{{ url_for('static', filename='not-found.png') }}" alt="Record not found" class="img-fluid my-auto d-block mx-auto d-block">
+        </div>
+    {% else %}
+        <table class="table table-hover">
+            <thead class="thead-light">
+            <tr>
+                <th class="align-middle">#</th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Title</a>
+                </th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Event ID</a>
+                </th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Event start</a>
+                </th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Event stop</a>
+                </th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Notify?</a>
+                </th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Is active?</a>
+                </th>
+                <th class="align-middle"></th>
+                <th class="align-middle"></th>
+                <th class="align-middle"></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for event in events %}
+                {% if not event.is_active %}
+                <tr class="list-group-item-danger align-middle">
+                {% else %}
+                <tr class="align-middle">
+                {% endif %}
+
+                    <th class="align-middle" scope="row">{{ loop.index + items_per_page * (request.args.get('page', '1')|int - 1) }}</th>
+                    <td class="align-middle" width="35%">{{ event.title }}</td>
+                    <td class="align-middle">{{ event.id }}</td>
+                    <td class="align-middle">
+                        {% if event.all_day_event %}
+                            {{ event.time_event_start.strftime('%Y-%m-%d') }}
+                        {% else %}
+                            {{ event.time_event_start.strftime('%Y-%m-%d %H:%M') }}
+                        {% endif %}
+                    </td>
+                    <td class="align-middle">
+                        {% if event.all_day_event %}
+                            {{ event.time_event_stop.strftime('%Y-%m-%d') }}
+                        {% else %}
+                            {{ event.time_event_stop.strftime('%Y-%m-%d %H:%M') }}
+                        {% endif %}
+                    </td>
+                    <td class="align-middle">
+                        {% if event.to_notify %}
+                            Yes
+                        {% else %}
+                            No
+                        {% endif %}
+                    </td>
+                    <td class="align-middle">
+                        {% if event.is_active %}
+                            Yes
+                        {% else %}
+                            No
+                        {% endif %}
+                    </td>
+                    <td class="align-middle">
+                        <a href="{{ url_for('admin_bp.event', event_id=event.id) }}" class="btn btn-sm btn-block btn-info">Details</a>
+                    </td>
+                    <td class="align-middle">
+                        {% if event.is_active %}
+                        <a href="{{ url_for('admin_bp.act_event', event_id=event.id) }}" class="btn btn-sm btn-block btn-warning">Deactivate</a>
+                        {% else %}
+                        <a href="{{ url_for('admin_bp.act_event', event_id=event.id) }}" class="btn btn-sm btn-block btn-success">Activate</a>
+                        {% endif %}
+                    </td>
+                    <td class="align-middle">
+                        <a href="{{ url_for('admin_bp.del_event', event_id=event.id) }}" class="btn btn-sm btn-block btn-danger">Delete</a>
+                    </td>
+            </tr>
+            {% else %}
+                <div class="text-center">
+                    <h5>We are sorry, but there are no results for key <strong>"{{ request.args.get('q') }}"</strong></h5>
+                </div>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% elif request.args.get('sub') == 'logs' %}
+<div class="row">
+    <div class="col-sm-12 col-md-6">
+
+    </div>
+    <div class="col-sm-12 col-md-6">
+
+    </div>
+
+</div>
+    {% if not total %}
+        <div class="text-center">
+            <h5>We are sorry, but there are no results for key <strong>"{{ request.args.get('q') }}"</strong></h5>
+        </div>
+    {% else %}
+        <table class="table table-hover">
+            <thead class="thead-light">
+            <tr>
+                <th class="align-middle">#</th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Log timestamp</a>
+                </th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Log name</a>
+                </th>
+                <th class="align-middle">
+                    <a style="color: inherit;">Log level</a>
+                </th>
+                <th class="align-middle">
+                    Log message?
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for log in logs %}
+                <tr class="align-middle">
+                    <th class="align-middle" scope="row">{{ loop.index + items_per_page * (request.args.get('page', '1')|int - 1) }}</th>
+                    <td class="align-middle">
+                        {{ log.time.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </td>
+                    <td class="align-middle">{{ log.log_name }}</td>
+
+                    <td class="align-middle">
+                        {{ log.level }}
+                    </td>
+                    <td class="align-middle" width="40%">
+                        {{ log.msg }}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endif %}
+{% if total %}
+<nav aria-label="...">
+    <ul class="pagination">
+                <li class="page-item {{ 'disabled' if not prev_url }}">
+            <a class="page-link" href="{{ prev_url }}" tabindex="-1">Previous</a>
+        </li>
+        {% if page_first != page_current %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin_bp.search', sub=request.args.get('sub'), q=request.args.get('q'), page=page_first) }}">{{ page_first }}</a></li>
+        {% endif %}
+        {% if page_current - page_first > 2 %}
+            <li class="page-item"><a class="page-link">...</a></li>
+        {% endif %}
+        {% if page_prev and page_prev != page_first %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin_bp.search', sub=request.args.get('sub'), q=request.args.get('q'), page=page_prev) }}">{{ page_prev }}</a></li>
+        {% endif %}
+        <li class="page-item active">
+            <a class="page-link" href="{{ url_for('admin_bp.search', sub=request.args.get('sub'), q=request.args.get('q'), page=page_current) }}">{{ page_current }} <span class="sr-only">(current)</span></a>
+        </li>
+        {% if page_next and page_next != page_last %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin_bp.search', sub=request.args.get('sub'), q=request.args.get('q'), page=page_next) }}">{{ page_next }}</a></li>
+        {% endif %}
+        {% if page_last - page_current > 2 %}
+            <li class="page-item"><a class="page-link">...</a></li>
+        {% endif %}
+        {% if page_last != page_current %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin_bp.search', sub=request.args.get('sub'), q=request.args.get('q'), page=page_last) }}">{{ page_last }}</a></li>
+        {% endif %}
+        <li class="page-item {{ 'disabled' if not next_url }}">
+            <a class="page-link" href="{{ next_url }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock body %}
+

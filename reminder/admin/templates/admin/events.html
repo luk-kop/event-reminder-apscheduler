@@ -1,8 +1,19 @@
-{% extends "admin/base_admin.html" %}
-{% set active_page = "events" %}
+{% extends 'admin/base_admin.html' %}
+{% set active_page = 'events' %}
 
 {% block pagehead %}
-    Events
+<div class="row">
+    <div class="col">
+        Events
+    </div>
+    <div class="float-right col">
+        <form class="form-inline float-right my-2 my-lg-0" action="{{ url_for('admin_bp.search') }}" method="GET">
+            <input type="hidden" id="id_sub" name="sub" value="events">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search..." aria-label="Search" name="q" required>
+            <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block body %}
@@ -15,7 +26,6 @@
     </div>
 
 </div>
-
     <table class="table table-hover">
         <thead class="thead-light">
         <tr>
@@ -64,7 +74,7 @@
                 {% elif request.args.get('col') == 'notify' and request.args.get('dir') == 'no' %}
                 <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='yes') }}">Notify? <span data-feather="thumbs-down"></span></a>
                 {% else %}
-                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='yes') }}">Notify?</span></a>
+                <a style="color: inherit;" href="{{ url_for('admin_bp.events', col='notify', dir='yes') }}">Notify?</a>
                 {% endif %}
             </th>
             <th class="align-middle">

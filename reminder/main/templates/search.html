@@ -7,33 +7,31 @@
     </div>
     <div class="float-right col">
         <form class="form-inline float-right my-2 my-lg-0" action="{{ url_for('main_bp.search') }}" method="GET">
-            <input class="form-control mr-sm-2" type="search" placeholder="Search..." aria-label="Search" name="q" required>
+            <input class="form-control mr-sm-2" type="search" placeholder="Search..." aria-label="Search" name="q" value="{{ request.args.get('q') }}" required>
             <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search</button>
         </form>
     </div>
 </div>
-
 {% endblock %}
 
 {% block body %}
-<div class="container">
 <nav class="nav nav-pills nav-fill mb-3 border-bottom pb-3" id="id-nav_bar">
-    <div class="col-3">
+    <div class="col-2">
         <a class="btn btn-outline-primary btn-block {{ 'active' if request.args.get('list') == 'current' or not request.query_string }}" href="{{ url_for('main_bp.events_list', list='current') }}" role="button">Current events</a>
     </div>
     {% if current_user.is_authenticated %}
-    <div class="col-3">
+    <div class="col">
         <a class="btn btn-outline-primary btn-block {{ 'active' if request.args.get('list') == 'own' }}" href="{{ url_for('main_bp.events_list', list='own') }}" role="button">Own current events</a>
     </div>
     {% else %}
-    <div class="col-3">
+    <div class="col">
         <a class="btn btn-outline-primary btn-block disabled {{ 'active' if request.args.get('list') == 'own' }}" href="{{ url_for('main_bp.events_list', list='own') }}" role="button">Own current events</a>
     </div>
     {% endif %}
-    <div class="col-3">
+    <div class="col">
         <a class="btn btn-outline-primary btn-block {{ 'active' if request.args.get('list') == 'all' }}" href="{{ url_for('main_bp.events_list', list='all') }}" role="button">All events</a>
     </div>
-    <div class="col-3">
+    <div class="col">
         <div class="nav-item dropdown">
             <a class="btn btn-outline-primary btn-block dropdown-toggle {{ 'active' if request.args.get('list') == 'author' }}" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Events by author</a>
             <div class="dropdown-menu active">
@@ -47,8 +45,11 @@
             </div>
         </div>
     </div>
+    <div class="col">
+    <a class="btn btn-outline-primary btn-block active" href="">Search results</a>
+    </div>
 </nav>
-{% for event in events.items %}
+{% for event in events %}
 <div class="accordion" id="accordion" role="tablist">
     <center>
         <div class="card border-secondary mb-2 card w-80">
@@ -130,40 +131,38 @@
 </div>
 {% endfor %}
 
-{% if events.items %}
+{% if total %}
 <nav aria-label="...">
     <ul class="pagination">
                 <li class="page-item {{ 'disabled' if not prev_url }}">
             <a class="page-link" href="{{ prev_url }}" tabindex="-1">Previous</a>
         </li>
-        {% for page_num in events.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-        {% if page_num %}
-            {% if events.page == page_num %}
-                <li class="page-item active">
-                    {% if not request.args %}
-                        <a class="page-link" href="{{ url_for('main_bp.events_list', list='current', page=page_num) }}">{{ page_num }} <span class="sr-only">(current)</span></a>
-                    {% else %}
-                        <a class="page-link" href="{{ url_for('main_bp.events_list', list=request.args.get('list'), page=page_num, id=request.args.get('id')) }}">{{ page_num }} <span class="sr-only">(current)</span></a>
-                    {% endif %}
-                </li>
-            {% else %}
-                {% if not request.args %}
-                    <li class="page-item"><a class="page-link" href="{{ url_for('main_bp.events_list', list='current', page=page_num) }}">{{ page_num }}</a></li>
-                {% else %}
-                    <li class="page-item"><a class="page-link" href="{{ url_for('main_bp.events_list', list=request.args.get('list'), page=page_num, id=request.args.get('id')) }}">{{ page_num }}</a></li>
-                {% endif %}
-            {% endif %}
-
-        {% else %}
+        {% if page_first != page_current %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('main_bp.search', q=request.args.get('q'), page=page_first) }}">{{ page_first }}</a></li>
+        {% endif %}
+        {% if page_current - page_first > 2 %}
             <li class="page-item"><a class="page-link">...</a></li>
         {% endif %}
-        {% endfor %}
-                <li class="page-item {{ 'disabled' if not next_url }}">
+        {% if page_prev and page_prev != page_first %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('main_bp.search', q=request.args.get('q'), page=page_prev) }}">{{ page_prev }}</a></li>
+        {% endif %}
+        <li class="page-item active">
+            <a class="page-link" href="{{ url_for('main_bp.search', q=request.args.get('q'), page=page_current) }}">{{ page_current }} <span class="sr-only">(current)</span></a>
+        </li>
+        {% if page_next and page_next != page_last %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('main_bp.search', q=request.args.get('q'), page=page_next) }}">{{ page_next }}</a></li>
+        {% endif %}
+        {% if page_last - page_current > 2 %}
+            <li class="page-item"><a class="page-link">...</a></li>
+        {% endif %}
+        {% if page_last != page_current %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('main_bp.search', q=request.args.get('q'), page=page_last) }}">{{ page_last }}</a></li>
+        {% endif %}
+        <li class="page-item {{ 'disabled' if not next_url }}">
             <a class="page-link" href="{{ next_url }}">Next</a>
         </li>
     </ul>
 </nav>
-</div>
 {% endif %}
 {% endblock body %}
 

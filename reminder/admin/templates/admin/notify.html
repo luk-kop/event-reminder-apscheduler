@@ -14,21 +14,22 @@
 <!-- div for mail test -->
 <div id="alerts"></div>
 
+<div class="container">
 <form action="" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <label for="id-notify_service">Notification configuration</label>
-    <div class="form-row mb-3">
-        <div class="input-group col-md-3">
+    <div class="form-row">
+        <div class="input-group col-md-4 mb-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Notification service status</span>
             </div>
-            <input class="form-control" name="notify_status" id="id-notify_service" type="checkbox" data-toggle="toggle" data-onstyle="success" data-offstyle="danger" {{ 'checked' if service_run }}>
+            <input class="form-control" name="notify_status" id="id-notify_service" type="checkbox" data-toggle="toggle" data-width="100" data-onstyle="success" data-offstyle="danger" {{ 'checked' if service_run }}>
         </div>
-        <div class="input-group col-md-4">
+        <div class="input-group col-md-6 mb-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Notification time interval</span>
             </div>
-            <select class="form-control" id="id-notify_unit" name="notify_unit">
+            <select class="form-control" style="text-align-last: center" id="id-notify_unit" name="notify_unit">
                 <option value="hours" {{ 'selected' if notify_unit == 'hours'}}>hours</option>
                 <option value="minutes" {{ 'selected' if notify_unit == 'minutes'}}>minutes</option>
                 <option value="seconds" {{'selected' if notify_unit == 'seconds'}}>seconds</option>
@@ -45,17 +46,17 @@
             </div>
             <input class="form-control text-center" type="text" id="id-mail_server" name="mail_server" value="{{ mail_server }}" max="50" required>
         </div>
-        <div class="input-group col-md-2" id="id-date_time_notify">
+        <div class="input-group col-md-3" id="id-date_time_notify">
             <div class="input-group-prepend">
                 <span class="input-group-text">Server port</span>
             </div>
             <input class="form-control text-center" type="text" id="id-mail_port" name="mail_port" value="{{ mail_port }}" max="50" required>
         </div>
-        <div class="input-group col-md-2">
+        <div class="input-group col-md-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Security</span>
             </div>
-            <select class="form-control" id="id-mail_security" name="mail_security">
+            <select class="form-control" style="text-align-last: center" id="id-mail_security" name="mail_security">
                 <option value="tls" {{ 'selected' if mail_security == 'tls' }}>TLS</option>
                 <option value="ssl" {{ 'selected' if mail_security == 'ssl' }}>SSL</option>
             </select>
@@ -63,14 +64,14 @@
     </div>
 
     <div class="form-row mb-3">
-        <div class="input-group col-md-4">
+        <div class="input-group col-md-5">
             <div class="input-group-prepend">
                 <span class="input-group-text">Mail username</span>
             </div>
             <input class="form-control text-center" type="text" id="id-mail_username" name="mail_username" value="{{ mail_username }}" max="50" required>
         </div>
 
-        <div class="input-group col-md-4">
+        <div class="input-group col-md-5">
             <div class="input-group-prepend">
                 <span class="input-group-text">Username password</span>
             </div>
@@ -82,7 +83,7 @@
     <input type="submit" class="btn btn-danger" name="cancel-btn" value="Cancel" formnovalidate>
 
 </form>
-
+</div>
 {% endblock body %}
 
 {% block scripts %}

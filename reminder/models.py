@@ -4,12 +4,62 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, AnonymousUserMixin
 
 from reminder.extensions import db, login_manager
+from reminder.search import add_to_index, remove_from_index, query_index
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Load user to login"""
+    """
+    Load user to login
+    """
     return User.query.get(int(user_id))
+
+
+class SearchableMixin:
+    """
+    Class, that when attached to a model, will give it the ability to automatically manage
+    an associated full-text index.
+    """
+    @classmethod
+    def search(cls, expression, page, per_page, filter_data=None):
+        ids, total = query_index(cls.__tablename__, expression, page, per_page, filter_data)
+        if total == 0:
+            return cls.query.filter_by(id=0), 0
+        when = []
+        for i in range(len(ids)):
+            when.append((ids[i], i))
+        return cls.query.filter(cls.id.in_(ids)).order_by(
+            db.case(when, value=cls.id)), total
+
+    @classmethod
+    def before_commit(cls, session):
+        session._changes = {
+            'add': list(session.new),
+            'update': list(session.dirty),
+            'delete': list(session.deleted)
+        }
+
+    @classmethod
+    def after_commit(cls, session):
+        for obj in session._changes['add']:
+            if isinstance(obj, SearchableMixin):
+                add_to_index(obj.__tablename__, obj)
+        for obj in session._changes['update']:
+            if isinstance(obj, SearchableMixin):
+                add_to_index(obj.__tablename__, obj)
+        for obj in session._changes['delete']:
+            if isinstance(obj, SearchableMixin):
+                remove_from_index(obj.__tablename__, obj)
+        session._changes = None
+
+    @classmethod
+    def reindex(cls):
+        for obj in cls.query:
+            add_to_index(cls.__tablename__, obj)
+
+
+db.event.listen(db.session, 'before_commit', SearchableMixin.before_commit)
+db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
 
 
 # Association Table
@@ -29,8 +79,11 @@ class Role(db.Model):
         return f'{self.name}'
 
 
-class User(db.Model, UserMixin):
-    """Table of users authorized to add new events."""
+class User(UserMixin, db.Model):
+    # __searchable__ = ['username', 'email']
+    """
+    Table of users authorized to add new events.
+    """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(40), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
@@ -73,8 +126,11 @@ class AnonymousUser(AnonymousUserMixin):
         return False
 
 
-class Event(db.Model):
-    """Events that will be notified"""
+class Event(SearchableMixin, db.Model):
+    """
+    Events that will be notified.
+    """
+    __searchable__ = ['is_active', 'title', 'details']
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(40), nullable=False)
     details = db.Column(db.String(300))
@@ -100,18 +156,21 @@ class Event(db.Model):
 
 
 class Notification(db.Model):
-    """Notification service config."""
+    """
+    Notification service config.
+    """
     id = db.Column(db.Integer, primary_key=True)
     notify_unit = db.Column(db.String(10), unique=True)
     notify_interval = db.Column(db.Integer)
 
 
-class Log(db.Model):
+class Log(SearchableMixin, db.Model):
+    __searchable__ = ['msg']
     id = db.Column(db.Integer, primary_key=True)
     log_name = db.Column(db.String)
-    level = db.Column(db.String) # info, debug, or error?
-    msg = db.Column(db.String(100)) # any custom log you may have included
-    time = db.Column(db.DateTime) # the current timestamp
+    level = db.Column(db.String)
+    msg = db.Column(db.String(100))
+    time = db.Column(db.DateTime)
 
     def __init__(self, log_name, level, time, msg):
         self.log_name = log_name
@@ -121,8 +180,12 @@ class Log(db.Model):
 
     @classmethod
     def delete_expired(cls):
-        """Delete logs older than indicated time-frame."""
+        """
+        Delete logs older than indicated time-frame.
+        """
         expiration_days = 7
         limit = datetime.utcnow() - timedelta(days=expiration_days)
         cls.query.filter(cls.time <= limit).delete
         db.session.commit()
+
+
