@@ -1,0 +1,244 @@
+{% extends 'admin/base_admin.html' %}
+{% set active_page = "dashboard" %}
+
+{% block head %}
+<!-- Custom styles for this template CSS -->
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block pagehead %}
+    Dashboard
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-widget-five">
+                        <div class="stat-icon dib">
+                            <object data="{{ url_for('static', filename='users.svg') }}" type="image/svg+xml"></object>
+                        </div>
+                        <div class="stat-content">
+                            <div class="text-left dib">
+                                <div class="stat-heading">
+                                    Number of users
+                                </div>
+                                <div class="stat-text">
+                                    {{ users_count }}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-widget-five">
+                        <div class="stat-icon dib">
+                            <object data="{{ url_for('static', filename='events.svg') }}" type="image/svg+xml"></object>
+                        </div>
+                        <div class="stat-content">
+                            <div class="text-left dib">
+                                <div class="stat-heading">
+                                    Number of events
+                                </div>
+                                <div class="stat-text">
+                                    {{ events_count }}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-widget-five">
+                        <div class="stat-icon dib">
+                            <object data="{{ url_for('static', filename='search.svg') }}" type="image/svg+xml"></object>
+                        </div>
+                        <div class="stat-content">
+                            <div class="text-left dib">
+                                <div class="stat-heading">
+                                    Elasticsearch service status
+                                </div>
+                                <div class="stat-text">
+                                    {% if search_status %}
+                                    <font color="green">Connected</font>
+                                    {% else %}
+                                    <font color="red">Not connected</font>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="stat-widget-five">
+                        <div class="stat-icon dib">
+                            <object data="{{ url_for('static', filename='notify.svg') }}" type="image/svg+xml"></object>
+                        </div>
+                        <div class="stat-content">
+                            <div class="text-left dib">
+                                <div class="stat-heading">
+                                    Notification service status
+                                </div>
+                                <div class="stat-text">
+                                    {% if notification_status %}
+                                    <font color="green">On</font>
+                                    {% else %}
+                                    <font color="red">Off</font>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="event_chart" height="159"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="row">
+                <div class="col-lg-6 col-xl-12 mb-4">
+                    <div class="card br-0">
+                        <div class="card-body">
+                            <canvas id="chart_users"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-xl-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <canvas id="chart_events"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/moment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/Chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/Chart.min.js') }}"></script>
+
+<script>
+var timeFormat = 'MMM Do';
+
+var ctx = document.getElementById('event_chart').getContext('2d');
+var event_chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [{% for item in events_labels %}
+             moment('{{ item }}', "YYYY-MM-DD").format(timeFormat),
+            {% endfor %}],
+        datasets: [{
+            label: 'Events per day',
+            data: [{% for item in events_values %}
+            "{{ item }}",
+            {% endfor %}
+            ],
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        },
+        title: {
+            display: true,
+            fontSize: 20,
+            text: 'Events created in the last 30 days'
+        }
+    }
+});
+
+// chart_users
+var ctx = document.getElementById('chart_users');
+var chart_users = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        datasets: [{
+            data: [{{ admin_users_count }}, {{ standard_users_count }}],
+            backgroundColor: ['rgba(54, 162, 235)', 'rgba(255, 99, 132)'],
+            fill: true
+        }],
+        labels: [
+        'Admin users',
+        'Standard users',
+        ]
+    },
+    options: {
+        legend: {
+            display: true,
+            position: 'right',
+        },
+        title: {
+            display: true,
+            fontSize: 18,
+            text: 'Users by role'
+        }
+    }
+});
+
+// chart_events
+var ctx = document.getElementById('chart_events');
+var chart_events = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        datasets: [{
+            data: [{{ events_active }}, {{ events_notactive }}],
+            backgroundColor: ['rgba(102, 187, 106)', 'rgba(239, 83, 80)'],
+            fill: true
+        }],
+        labels: [
+        'Active events',
+        'Inactive events',
+        ]
+    },
+    options: {
+        legend: {
+            display: true,
+            position: 'right',
+        },
+        title: {
+            display: true,
+            fontSize: 18,
+            text: 'Active events'
+        }
+    }
+});
+</script>
+{% endblock scripts %}

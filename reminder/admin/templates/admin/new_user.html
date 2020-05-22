@@ -14,9 +14,10 @@
         <div class="col-md-5 mb-3">
             <label for="id-username">Username</label>
             {% if form_content %}
-                <input type="text" class="form-control" placeholder="Enter username..." value="{{ form_content.username }}" id="id-username" name="username" min="1" max="40" required>
+                <input type="text" class="form-control" placeholder="Enter username..." value="{{ form_content.username }}" id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$" title="Username should contain chars: a-z, A-Z, 0-9, . _ -" required>
             {% else %}
-                <input type="text" class="form-control" placeholder="Enter username..." id="id-username" name="username" min="1" max="40" required>
+                <input type="text" class="form-control" placeholder="Enter username..." id="id-username" name="username" min="1" max="40" title="Username should contain chars: a-z, A-Z, 0-9, . _ -" required>
+                 <!--<input type="text" class="form-control" placeholder="Enter username..." id="id-username" name="username" min="1" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$" title="Username should contain chars: a-z, A-Z, 0-9, . _ -" required>-->
             {% endif %}
         </div>
         <div class="col-md-5 mb-3">
@@ -26,9 +27,9 @@
                     <span class="input-group-text" id="id-email-prepend">@</span>
                 </div>
                 {% if form_content %}
-                    <input type="email" class="form-control" placeholder="Enter user's email address..." value="{{ form_content.email }}" id="id-email" name="email" min="1" max="40" required>
+                    <input type="email" class="form-control" placeholder="Enter user's email address..." value="{{ form_content.email }}" id="id-email" name="email" pattern="^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$" min="4" max="70" required>
                 {% else %}
-                    <input type="email" class="form-control" placeholder="Enter user's email address..." id="id-email" name="email" min="1" max="40" required>
+                    <input type="email" class="form-control" placeholder="Enter user's email address..." id="id-email" name="email" pattern="^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$" min="4" max="70" required>
                 {% endif %}
             </div>
         </div>
@@ -74,7 +75,7 @@
     <div class="form-row">
         <div class="col-md-5 mb-3">
             <label for="id-password">Password</label>
-            <input type="password" class="form-control" placeholder="New password..." id="id-password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Password must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" name="password" min="0" max="40">
+            <input type="password" class="form-control" placeholder="New password..." id="id-password" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,40}$" title="Password must contain minimum 8 characters, at least one letter, one number and one special character" name="password" min="0" max="40">
         </div>
         <div class="col-md-5 mb-3">
             <label for="id-password2">Confirm password</label>

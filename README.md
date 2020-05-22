@@ -2,7 +2,7 @@
 
 The **Event Reminder** is a simple web application based on **[Flask](https://flask.palletsprojects.com/en/1.1.x/)** framework, **[Bootstrap](https://getbootstrap.com/)** user interface framework and **[FullCalendar](https://fullcalendar.io/)** full-sized JavaScript calendar. 
  
-The main purpose of the **Event Reminder** application is to send notifications about upcoming events to selected users. The application allows a standard user to enter event data, process it and display with the **FullCalendar** API. Moreover, the application has a built-in admin panel for the management of users, events, notification service and display app related logs. Sending reminders through the notification service is performed by the SMTP e-mail server provided by the admin user and by the APScheduler library.
+The main purpose of the **Event Reminder** application is to send notifications about upcoming events to selected users. The application allows a standard user to enter event data, process it and display with the **FullCalendar** API. Moreover, the application has a built-in admin panel for the management of users, events, notification service, display app related logs and basic system info on app dashboard partly based on **[Chart.js](https://www.chartjs.org/)**. Sending reminders through the notification service is performed by the SMTP e-mail server provided by the admin user and by the APScheduler library.
 The application has implemented integration with the **Elasticsearch** search engine.
 ***
 

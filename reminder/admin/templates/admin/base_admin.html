@@ -14,7 +14,7 @@
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 
-        <!-- Custom styles for this template CSS -->
+        <!-- Custom styles for this base template CSS -->
         <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
 
         {% block head %}
@@ -98,10 +98,11 @@
     </nav>
 
     {% set navigation_bar = [
+    ('admin_bp.dashboard', 'dashboard', 'globe', 'Dashboard'),
     ('admin_bp.users', 'users', 'users', 'Users'),
     ('admin_bp.new_user', 'new_user', 'user-plus', 'New user'),
     ('admin_bp.events', 'events', 'database', 'Events'),
-    ('admin_bp.notify', 'notify', 'youtube', 'Notification service'),
+    ('admin_bp.notify', 'notify', 'bell', 'Notification service'),
     ('admin_bp.search_engine', 'search_engine', 'search', 'Search engine'),
     ('admin_bp.logs', 'logs', 'file-text', 'Logs'),
     ] -%}
@@ -110,7 +111,6 @@
     <div class="container-fluid">
         <div class="row">
             <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-                <!-- style="max-width: 12rem;" -->
                 <div class="sidebar-sticky">
                     <ul class="nav flex-column">
                         {% if current_user.is_authenticated %}

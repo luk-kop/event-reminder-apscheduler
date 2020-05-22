@@ -48,7 +48,8 @@ class User(Base):
     events_created = relationship('Event',
                                   backref='author',
                                   lazy='dynamic',
-                                  foreign_keys='Event.author_uid')
+                                  foreign_keys='Event.author_uid',
+                                  cascade='all, delete-orphan')
     events_notified = relationship('Event',
                                    secondary=user_to_event,
                                    back_populates='notified_uids')
@@ -105,12 +106,12 @@ class Log(Base):
 
 if __name__ == '__main__':
 
-    db_name = input('\nEnter name for DB [app.db]:')
+    db_name = input('\nEnter name for DB [app.db]: ')
     if not db_name:
         db_name = 'app.db'
 
     if os.path.exists(db_name):
-        query = input(f'\nDB "{db_name} "already exist. Shall I remove it [yes]?')
+        query = input(f'\nDB "{db_name} "already exist. Shall I remove it [yes]? ')
         if query.strip().lower() in ['', 'yes']:
             print(f'\nRemoving an existing DB - "{db_name}"...')
             os.remove(db_name)
@@ -176,6 +177,31 @@ if __name__ == '__main__':
              email='ponton@niepodam.pl',
              password_hash=generate_password_hash(f'{user_passwd}'),
              access_granted=True,
+             role_id=2),
+        User(username='shrek',
+             email='shrek@niepodam.pl',
+             password_hash=generate_password_hash(f'{user_passwd}'),
+             access_granted=True,
+             role_id=2),
+        User(username='john.box',
+             email='john.box@niepodam.pl',
+             password_hash=generate_password_hash(f'{user_passwd}'),
+             access_granted=True,
+             role_id=2),
+        User(username='tom.mustang',
+             email='tom.mustang@niepodam.pl',
+             password_hash=generate_password_hash(f'{user_passwd}'),
+             access_granted=True,
+             role_id=2),
+        User(username='john_bravo',
+             email='john_brav@niepodam.pl',
+             password_hash=generate_password_hash(f'{user_passwd}'),
+             access_granted=False,
+             role_id=2),
+        User(username='luk.brown',
+             email='luk.brown@niepodam.pl',
+             password_hash=generate_password_hash(f'{user_passwd}'),
+             access_granted=False,
              role_id=2),
     ]
 
@@ -583,6 +609,17 @@ if __name__ == '__main__':
               all_day_event=True,
               time_event_start=today - timedelta(days=12, hours=5),
               time_event_stop=today - timedelta(days=11, hours=3),
+              to_notify=False,
+              author_uid=random_user_id(),
+              notification_sent=False,
+              is_active=True,
+              ),
+        Event(title='Test event',
+              details=' Maecenas a lacus dapibus, consectetur quam et, auctor dui.',
+              time_creation=today - timedelta(days=25, hours=6),
+              all_day_event=True,
+              time_event_start=today - timedelta(days=6, hours=5),
+              time_event_stop=today - timedelta(days=4, hours=3),
               to_notify=False,
               author_uid=random_user_id(),
               notification_sent=False,

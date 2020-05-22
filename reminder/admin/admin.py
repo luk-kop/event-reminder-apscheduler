@@ -1,6 +1,7 @@
 import datetime
 import json
 import time
+import re
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, session
 from flask_login import current_user, login_required
@@ -37,7 +38,8 @@ def background_job():
                 smtp_mail.send_email('Attention! Upcoming event!',
                            users_to_notify,
                            event)
-                current_app.logger_admin.info(f'Notification service: mail sent to: {users_to_notify}')
+                current_app.logger_admin.info(f'Notification service: notification has been sent to: {users_to_notify}')
+                # only for test
                 print(f'Mail sent to {users_to_notify}')
                 event.notification_sent = True
                 db.session.commit()
@@ -55,6 +57,17 @@ def update_last_seen():
     if current_user.is_authenticated:
         current_user.user_seen()
         db.session.commit()
+
+
+def test_pattern(item_pattern, item):
+    """
+    Validate user input on server-side.
+    """
+    pattern = re.compile(item_pattern)
+    if re.match(pattern, item):
+        return True
+    else:
+        return False
 
 
 @admin_bp.route('/events')
@@ -261,13 +274,30 @@ def new_user():
         form_content = check_user_exist(request)
         if form_content:
             return render_template('admin/new_user.html', title='New user', form_content=form_content)
-        user = User(username=request.form.get('username'),
-                    email=request.form.get('email'),
+        username_form = request.form.get('username')
+        email_form = request.form.get('email')
+        password_form = request.form.get('password')
+        # Validate form data on server-side
+        pattern_username = r'^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$'
+        pattern_email = r'^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$'
+        pattern_password = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,40}$'
+        if not test_pattern(pattern_username, username_form):
+            flash(f'Please enter valid username. Username should contain chars: a-z, A-Z, 0-9, . _ -', 'danger')
+            return redirect(url_for('admin_bp.new_user'))
+        if not test_pattern(pattern_email, email_form):
+            flash(f'Please enter valid email address', 'danger')
+            return redirect(url_for('admin_bp.new_user'))
+        user = User(username=username_form,
+                    email=email_form,
                     access_granted=True if request.form.get('access') == 'True' else False,
                     pass_change_req=True if request.form.get('pass_reset') == 'True' else False,
                     role_id=str(Role.query.filter_by(name=request.form.get('role')).first().id))
-        if request.form.get('password'):
-            user.set_password(request.form.get('password'))
+        if not test_pattern(pattern_password, password_form):
+            flash(f'Password must contain minimum 8 characters, at least one letter, one number and one special '
+                  f'character', 'danger')
+            return redirect(url_for('admin_bp.new_user'))
+        if password_form:
+            user.set_password(password_form)
         else:
             user.set_password(current_app.config['USER_DEFAULT_PASS'])
         db.session.add(user)
@@ -292,17 +322,33 @@ def user(user_id):
         form_content = check_user_exist(request, user)
         if form_content:
             return render_template('admin/user.html', user=user)
-        user.username = request.form.get('username')
-        user.email = request.form.get('email')
+        username_form = request.form.get('username')
+        email_form = request.form.get('email')
+        password_form = request.form.get('password')
+        # Validate form data on server-side
+        pattern_username = r'^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$'
+        pattern_email = r'^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$'
+        pattern_password = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,40}$'
+        if not test_pattern(pattern_username, username_form):
+            flash(f'Please enter valid username. Username should contain chars: a-z, A-Z, 0-9, . _ -', 'danger')
+            return redirect(url_for('admin_bp.new_user'))
+        if not test_pattern(pattern_email, email_form):
+            flash(f'Please enter valid email address', 'danger')
+            return redirect(url_for('admin_bp.new_user'))
+        user.username = username_form
+        user.email = email_form
         if request.form.get('access') == 'True' and str(user.access_granted) != request.form.get('access'):
             user.failed_login_attempts = 0
         user.access_granted = True if request.form.get('access') == 'True' else False
         user.pass_change_req = True if request.form.get('pass_reset') == 'True' else False
         user.role_id = str(Role.query.filter_by(name=request.form.get('role')).first().id)
         # Check whether password has been changed
-        user_pass_form = request.form.get('password')
-        if user_pass_form and not user.check_password(user_pass_form):
-            user.set_password(user_pass_form)
+        if password_form and not user.check_password(password_form):
+            if not test_pattern(pattern_password, password_form):
+                flash(f'Password must contain minimum 8 characters, at least one letter, one number and one special '
+                      f'character', 'danger')
+                return render_template('admin/user.html', user=user)
+            user.set_password(password_form)
         db.session.commit()
         current_app.logger_admin.info(f'User "{user.username}" data has been changed')
         flash('Your changes have been saved!', 'success')
@@ -374,7 +420,7 @@ def act_event(event_id):
 
 
 @admin_bp.route('/notify/', methods=['GET', 'POST'])
-@cancel_click('admin_bp.users')
+@cancel_click('admin_bp.dashboard')
 @login_required
 @admin_required
 def notify():
@@ -420,21 +466,26 @@ def notify():
         # check weather some scheduler jobs exist
         # if scheduler.running:
         # print(scheduler.get_jobs())
+
         # Test mail configuration before running service
         if notify_status_form == 'on':
             test_mail_config = smtp_mail.test_email()
+            current_app.config['NOTIFICATION_SERVICE_STATUS'] = True
         else:
             test_mail_config = False
         # Test mail configuration before running service.
         if not notify_status_form and scheduler.get_jobs():
             scheduler.remove_job('my_job_id')
             current_app.logger_admin.info(f'Notification service has been turned off by "{current_user.username}"')
+            current_app.config['NOTIFICATION_SERVICE_STATUS'] = False
             flash('The notify service has been turned off!', 'success')
         elif scheduler.get_jobs() and not test_mail_config:
             scheduler.remove_job('my_job_id')
+            current_app.config['NOTIFICATION_SERVICE_STATUS'] = False
         elif notify_status_form == 'on' and test_mail_config:
             if not scheduler.get_jobs():
                 current_app.logger_admin.info(f'Notification service has been started by "{current_user.username}"')
+                current_app.config['NOTIFICATION_SERVICE_STATUS'] = True
             else:
                 current_app.logger_admin.info(f'Notification service config has been changed by '
                                               f'"{current_user.username}"')
@@ -514,7 +565,7 @@ def logs():
 
 
 @admin_bp.route('/search_engine', methods=['GET', 'POST'])
-@cancel_click('admin_bp.users')
+@cancel_click('admin_bp.dashboard')
 @login_required
 @admin_required
 def search_engine():
@@ -616,3 +667,46 @@ def search():
                                next_url=next_url,
                                prev_url=prev_url,
                                **pagination)
+
+
+@admin_bp.route('/dashboard')
+@login_required
+@admin_required
+def dashboard():
+    # Data fetched from db
+    users_count = User.query.count()
+    standard_users_count = User.query.filter(User.role_id == 2).count()
+    admin_users_count = User.query.filter(User.role_id == 1).count()
+    events_active = Event.query.filter(Event.is_active == True).count()
+    events_notactive = Event.query.filter(Event.is_active == False).count()
+    events_count = Event.query.count()
+    # Data for chart - 'Events created in last 30 days'
+    today = datetime.datetime.today()
+    events = Event.query.with_entities(Event.time_creation).filter(Event.time_creation <= today,
+                                Event.time_creation >= today - datetime.timedelta(days=31)).order_by('time_creation').all()
+    event_dates = [event[0].date() for event in events]
+    chart_data = {}
+    for day in event_dates:
+        new = chart_data.get(day, 0)
+        chart_data[day] = new + 1
+    events_labels = chart_data.keys()
+    events_values = chart_data.values()
+
+    if not current_app.elasticsearch or not current_app.elasticsearch.ping():
+        search_status = False
+    else:
+        search_status = True
+    notification_status = current_app.config.get('NOTIFICATION_SERVICE_STATUS')
+    data = {
+        'users_count': users_count,
+        'standard_users_count': standard_users_count,
+        'admin_users_count': admin_users_count,
+        'events_count': events_count,
+        'search_status': search_status,
+        'notification_status': notification_status,
+        'events_active': events_active,
+        'events_notactive': events_notactive,
+        'events_labels': list(events_labels),
+        'events_values': list(events_values),
+    }
+    return render_template('admin/dashboard.html', **data)

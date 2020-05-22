@@ -92,7 +92,8 @@ class User(UserMixin, db.Model):
     events_created = db.relationship('Event',
                                      backref='author',
                                      lazy='dynamic',
-                                     foreign_keys='Event.author_uid')
+                                     foreign_keys='Event.author_uid',
+                                     cascade='all, delete-orphan')
     events_notified = db.relationship('Event',
                                       secondary=user_to_event,
                                       back_populates='notified_uids')

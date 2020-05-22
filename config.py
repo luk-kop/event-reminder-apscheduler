@@ -23,6 +23,7 @@ class Config:
 
     # Custom Config
     USER_DEFAULT_PASS = os.environ.get('USER_DEFAULT_PASS')
+    NOTIFICATION_SERVICE_STATUS = False
 
     # Email config
     MAIL_SERVER = os.environ.get('MAIL_SERVER')

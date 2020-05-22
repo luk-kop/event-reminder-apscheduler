@@ -63,7 +63,7 @@ def admin_portal():
     """
     Portal for user with admin rights.
     """
-    return redirect(url_for('admin_bp.users'))
+    return redirect(url_for('admin_bp.dashboard'))
 
 
 def events_authors_func(today, today_only_day):
