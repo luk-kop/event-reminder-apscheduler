@@ -12,12 +12,15 @@ Below instructions will get you a copy of the project up and running on your loc
 
 
 ### Requirements
+Minimum version of python required to run the **Event Reminder** application - **Python 3.7.7**
+
 Python third party packages:
 * [Flask](https://flask.palletsprojects.com/en/1.1.x/)
 * [Flask-SQLalchemy](https://flask-sqlalchemy.palletsprojects.com/en/2.x/)
 * [Flask-WTF](https://flask-wtf.readthedocs.io/en/stable/)
 * [Flask-APSchedular](https://github.com/viniciuschiele/flask-apscheduler)
 * [Flask-Login](https://flask-login.readthedocs.io/en/latest/)
+* [Requests](https://requests.readthedocs.io/en/master/)
 * [elasticsearch](https://pypi.org/project/elasticsearch/)
 
 ### Installation

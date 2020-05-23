@@ -133,7 +133,7 @@ class Event(SearchableMixin, db.Model):
     """
     __searchable__ = ['is_active', 'title', 'details']
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(40), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
     details = db.Column(db.String(300))
     time_creation = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     all_day_event = db.Column(db.Boolean, nullable=False)
@@ -168,8 +168,8 @@ class Notification(db.Model):
 class Log(SearchableMixin, db.Model):
     __searchable__ = ['msg']
     id = db.Column(db.Integer, primary_key=True)
-    log_name = db.Column(db.String)
-    level = db.Column(db.String)
+    log_name = db.Column(db.String(20))
+    level = db.Column(db.String(20))
     msg = db.Column(db.String(100))
     time = db.Column(db.DateTime)
 

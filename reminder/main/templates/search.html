@@ -15,6 +15,7 @@
 {% endblock %}
 
 {% block body %}
+<div class="container">
 <nav class="nav nav-pills nav-fill mb-3 border-bottom pb-3" id="id-nav_bar">
     <div class="col-2">
         <a class="btn btn-outline-primary btn-block {{ 'active' if request.args.get('list') == 'current' or not request.query_string }}" href="{{ url_for('main_bp.events_list', list='current') }}" role="button">Current events</a>
@@ -164,5 +165,6 @@
     </ul>
 </nav>
 {% endif %}
+</div>
 {% endblock body %}
 

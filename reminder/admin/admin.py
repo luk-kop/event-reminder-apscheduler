@@ -292,11 +292,11 @@ def new_user():
                     access_granted=True if request.form.get('access') == 'True' else False,
                     pass_change_req=True if request.form.get('pass_reset') == 'True' else False,
                     role_id=str(Role.query.filter_by(name=request.form.get('role')).first().id))
-        if not test_pattern(pattern_password, password_form):
-            flash(f'Password must contain minimum 8 characters, at least one letter, one number and one special '
-                  f'character', 'danger')
-            return redirect(url_for('admin_bp.new_user'))
         if password_form:
+            if not test_pattern(pattern_password, password_form):
+                flash(f'Password must contain minimum 8 characters, at least one letter, one number and one special '
+                      f'character', 'danger')
+                return redirect(url_for('admin_bp.new_user'))
             user.set_password(password_form)
         else:
             user.set_password(current_app.config['USER_DEFAULT_PASS'])

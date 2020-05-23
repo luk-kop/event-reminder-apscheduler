@@ -132,6 +132,7 @@ if __name__ == '__main__':
     ]
 
     session.bulk_save_objects(roles)
+    session.commit()
 
     notification_config = [
         Notification(notify_unit='hours', notify_interval=1),

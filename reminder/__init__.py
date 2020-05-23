@@ -16,7 +16,6 @@ from reminder.extensions import (
     db,
     login_manager,
     csrf,
-    migrate,
     scheduler,
 )
 from reminder.custom_handler import DatabaseHandler
@@ -46,8 +45,6 @@ def register_extensions(app):
     db.init_app(app)
     # enable CSRF protection globally for Flask app
     csrf.init_app(app)
-    # 'migrate' object represents the migration engine
-    migrate.init_app(app, db)
     # use for user log in
     login_manager.init_app(app)
     # tell login_manager where cane find login page (here 'login' function)
