@@ -2,7 +2,7 @@
 {% block head %}
 {% set active_page = "index" %}
 
-    <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel='stylesheet'>
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
 
     <link href="{{ url_for('static', filename='fullcalendar/core/main.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='fullcalendar/daygrid/main.css') }}" rel="stylesheet">
@@ -29,37 +29,6 @@
             eventLimit: true, // allow "more" link when too many events
 
             events: '/api/events',
-/*
-            events: [
-                {
-                    id: '12',
-                    title: 'Meeting',
-                    start: '2020-04-12T14:30:00',
-                    //end: '2020-04-12T14:30:00',
-                    allDay: false,
-                    extendedProps: {
-                        status: 'done',
-                        details: 'The quick brown fox jumps over the lazy dog!',
-                    }
-                },
-                {
-                    id: '13',
-                    title: 'Birthday Party',
-                    start: '2020-04-13T07:00:00',
-                    allDay: false,
-                    backgroundColor: 'green',
-                    borderColor: 'green'
-                },
-                {
-                    id: '14',
-                    title: 'Doctor Visit',
-                    start: '2020-04-13',
-                    allDay: true,
-                    backgroundColor: 'green',
-                    borderColor: 'green'
-                },
-            ],
-*/
             eventTimeFormat: { // like '14:30:00'
                 hour: '2-digit',
                 minute: '2-digit',
@@ -93,9 +62,7 @@
 
         calendar.render();
       });
-
     </script>
-
 {% endblock %}
 
 {% block pagehead %}
@@ -109,33 +76,18 @@
     </div>
 
     <div id="calendarModal" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span> <span>close</span></button>
-                <h4 id="modalTitle" class="modal-title"></h4>
-            </div>
-            <div id="modalBody" class="modal-body"> </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span> <span>close</span></button>
+                    <h4 id="modalTitle" class="modal-title"></h4>
+                </div>
+                <div id="modalBody" class="modal-body"> </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-</div>
-
-
-
-
 {% endblock %}
-
-
-<!--
-    <script>
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            plugins: [ 'bootstrap' ],
-            themeSystem: 'bootstrap'
-        });
-    </script>
--->

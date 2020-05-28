@@ -10,6 +10,7 @@ import elasticsearch.exceptions
 from reminder.extensions import db
 from reminder.models import User, Event, Log
 from reminder.custom_decorators import admin_required, login_required, cancel_click
+from reminder.admin.admin import test_pattern
 
 
 main_bp = Blueprint('main_bp', __name__,
@@ -24,16 +25,6 @@ def str_to_datetime(date_str, time_str=None):
     if not time_str:
         return datetime.datetime.fromisoformat(date_str)
     return datetime.datetime.fromisoformat(f'{date_str}T{time_str}')
-
-
-@main_bp.before_app_first_request
-def reindex_search():
-    """
-    Refresh an index inside elasticsearch with all the data from the relational side.
-    """
-    # Add all the events and logs from the db to the search index.
-    Event.reindex()
-    Log.reindex()
 
 
 @main_bp.before_request
@@ -170,9 +161,7 @@ def get_events():
     API for FullCalendar.
     """
     today = datetime.datetime.today()
-    # TODO: limit huge number of API request - DDoS/DoS mitigation
     date_start, date_end = request.args['start'], request.args['end']
-
     # Create datetime objects for calendar view date limits.
     try:
         date_start_dt = datetime.datetime(int(date_start[:4]), int(date_start[5:7]), int(date_start[8:10]))
@@ -211,6 +200,34 @@ def get_events():
     return jsonify(events_api)
 
 
+def event_validation(request):
+    """
+    Validate user input on server-side
+    """
+    print(request.form)
+    title_form = request.form.get('title')
+    date_event_start_form = request.form.get('date_event_start')
+    date_event_stop_form = request.form.get('date_event_stop')
+    date_event_notify_form = request.form.get('date_notify')
+    pattern_date = r'^\d{4}-(0[1-9]|[1][0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$'
+
+    # date_event_start, date_event_start, date_notify, 2020-05-26
+    # pattern_username = r'^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$'
+    if not title_form or len(title_form) > Event.title.type.length:
+        flash(f'Please enter event\'s title!', 'danger')
+        return False
+    if not date_event_start_form or not test_pattern(pattern_date, date_event_start_form):
+        flash(f'Please enter valid start day!', 'danger')
+        return False
+    if not date_event_stop_form or not test_pattern(pattern_date, date_event_stop_form):
+        flash(f'Please enter valid stop day!', 'danger')
+        return False
+    if date_event_notify_form and not test_pattern(pattern_date, date_event_notify_form):
+        flash(f'Please enter valid notify day!', 'danger')
+        return False
+    return True
+
+
 @main_bp.route('/new_event', methods=['GET', 'POST'])
 @cancel_click('main_bp.index')
 @login_required
@@ -221,6 +238,9 @@ def new_event():
     users_to_notify = User.query.filter_by(role_id=2).all()
     today = datetime.date.today().strftime("%Y-%m-%d")
     if request.method == "POST":
+        # Form validation - sever-side
+        if not event_validation(request):
+            return redirect(url_for('main_bp.new_event'))
         to_notify_db = True if request.form.get('to_notify') == 'True' else False
         time_notify_db = str_to_datetime(request.form.get('date_notify'), request.form.get('time_notify')) \
             if request.form.get('date_notify') else None

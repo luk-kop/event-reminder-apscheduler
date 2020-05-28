@@ -180,13 +180,12 @@ class Log(SearchableMixin, db.Model):
         self.msg = msg
 
     @classmethod
-    def delete_expired(cls):
+    def delete_expired(cls, expiration_days):
         """
         Delete logs older than indicated time-frame.
         """
-        expiration_days = 7
         limit = datetime.utcnow() - timedelta(days=expiration_days)
-        cls.query.filter(cls.time <= limit).delete
+        cls.query.filter(cls.time <= limit).delete()
         db.session.commit()
 
 

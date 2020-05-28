@@ -17,6 +17,7 @@ from reminder.extensions import (
     login_manager,
     csrf,
     scheduler,
+    cache,
 )
 from reminder.custom_handler import DatabaseHandler
 from reminder.models import Event
@@ -27,9 +28,9 @@ def create_app():
     Construct the core app object.
     """
     app = Flask(__name__)
-    # Application Configuration
-    app.config.from_object(Config)
     with app.app_context():
+        # Application Configuration
+        app.config.from_object(Config)
         register_extensions(app)
         register_blueprints(app)
         configure_logger(app)
@@ -56,6 +57,7 @@ def register_extensions(app):
         scheduler.start()
     # initialize ElasticSearch
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) if app.config['ELASTICSEARCH_URL'] else None
+    cache.init_app(app)
 
 
 def register_blueprints(app):

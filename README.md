@@ -20,8 +20,10 @@ Python third party packages:
 * [Flask-WTF](https://flask-wtf.readthedocs.io/en/stable/)
 * [Flask-APSchedular](https://github.com/viniciuschiele/flask-apscheduler)
 * [Flask-Login](https://flask-login.readthedocs.io/en/latest/)
+* [Flask-Caching](https://flask-caching.readthedocs.io/en/latest/)
 * [Requests](https://requests.readthedocs.io/en/master/)
 * [elasticsearch](https://pypi.org/project/elasticsearch/)
+* [python-dotenv](https://pypi.org/project/python-dotenv/)
 
 ### Installation
 
@@ -33,19 +35,22 @@ $ source venv/bin/activate
 (venv) $ pip install -r requirements.txt
 ```
 
-### Environment varaibles
+### Environment variables
 
-To run application successfully please provide the following environment variables (example for Linux OS Distributions):
+Event Reminder application depends on some specific environment variables. 
+To run application successfully the environment variables should be stored in `.env` file in the root application directory (`event-reminder` dir).
+
 ```
-export SECRET_KEY='use-some-random-key'
-export USER_DEFAULT_PASS='provide-some-default-pass'
-export MAIL_SERVER=smtp.example.com
-export MAIL_PORT=587
-export MAIL_USERNAME=xxx.yyy@example.com        # account which will be used for SMTP email service
-export MAIL_PASSWORD=xxxxxxx                    # password for above account
-export ELASTICSEARCH_URL=http://localhost:9200  # optional 
+# '.env' file
+SECRET_KEY='use-some-random-key'
+USER_DEFAULT_PASS='provide-some-default-pass'
+MAIL_SERVER=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=xxx.yyy@example.com           # account which will be used for SMTP email service
+MAIL_PASSWORD=xxxxxxx                       # password for above account
+ELASTICSEARCH_URL=http://localhost:9200     # optional 
 ```
-If you are using MS Windows, you need to replace `export` with `set` in each of the statements above.
+The `.env` file will be imported by application on startup.
 
 ### Elasticsearch server
 Elasticsearch is not required to run the Event Reminder application. Without the specified 'ELASTICSEARCH_URL' variable and/or running the Elasticsearch node, the application will run, but no search function will be available.

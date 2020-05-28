@@ -3,13 +3,13 @@ import json
 import time
 import re
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, session
-from flask_login import current_user, login_required
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, session, g
+from flask_login import current_user
 from sqlalchemy import func, desc, asc
 import requests
 import elasticsearch.exceptions
 
-from reminder.extensions import db, scheduler
+from reminder.extensions import db, scheduler, cache
 from reminder.models import Role, User, Event, Notification, Log
 from reminder.main import main
 from reminder.admin import smtp_mail
@@ -19,6 +19,34 @@ from reminder.custom_decorators import admin_required, login_required, cancel_cl
 admin_bp = Blueprint('admin_bp', __name__,
                      template_folder='templates',
                      static_folder='static')
+
+
+@admin_bp.before_app_first_request
+def before_app_req():
+    """
+    Refresh an index inside elasticsearch with all the data from the relational side and cash mail config.
+    """
+    # Add all the events and logs from the db to the search index.
+    Event.reindex()
+    Log.reindex()
+    # Caching mail server config - in order to allow the admin to change the configuration while the application is running
+    cache.set_many({'mail_server': current_app.config.get('MAIL_SERVER'),
+                    'mail_port': current_app.config.get('MAIL_PORT'),
+                    'mail_security': current_app.config.get('MAIL_SECURITY'),
+                    'mail_username': current_app.config.get('MAIL_DEFAULT_SENDER'),
+                    'mail_password': current_app.config.get('MAIL_PASSWORD')
+                    })
+    # cache.clear()
+
+
+@admin_bp.before_request
+def update_last_seen():
+    """
+    Update when the current user was last seen (User.last_seen attribute).
+    """
+    if current_user.is_authenticated:
+        current_user.user_seen()
+        db.session.commit()
 
 
 def background_job():
@@ -36,27 +64,22 @@ def background_job():
             for event in events_to_notify:
                 users_to_notify = [user for user in event.notified_uids]
                 smtp_mail.send_email('Attention! Upcoming event!',
-                           users_to_notify,
-                           event)
+                                     users_to_notify,
+                                     event,
+                                     cache.get('mail_server'),
+                                     cache.get('mail_port'),
+                                     cache.get('mail_security'),
+                                     cache.get('mail_username'),
+                                     cache.get('mail_password'))
                 current_app.logger_admin.info(f'Notification service: notification has been sent to: {users_to_notify}')
                 # only for test
                 print(f'Mail sent to {users_to_notify}')
                 event.notification_sent = True
-                db.session.commit()
+            db.session.commit()
         except Exception as error:
             current_app.logger_admin.error(f'Background job error: {error}')
             # Remove job when error occure.
             scheduler.remove_job('my_job_id')
-
-
-@admin_bp.before_request
-def update_last_seen():
-    """
-    Update when the current user was last seen (User.last_seen attribute).
-    """
-    if current_user.is_authenticated:
-        current_user.user_seen()
-        db.session.commit()
 
 
 def test_pattern(item_pattern, item):
@@ -427,14 +450,16 @@ def notify():
     """
     Func allows to start notification service and change the service configuration.
     """
+    mail_config_cache = cache.get_dict('mail_server', 'mail_port', 'mail_security', 'mail_username', 'mail_password')
     # Notification config data (for interval and interval unit).
     notification_config = Notification.query.first()
     # Mail config data.
     notify_config = {
-        'mail_server': current_app.config.get('MAIL_SERVER'),
-        'mail_port': current_app.config.get('MAIL_PORT'),
-        'mail_security': current_app.config.get('MAIL_SECURITY'),
-        'mail_username': current_app.config.get('MAIL_USERNAME'),
+        'mail_server': mail_config_cache.get('mail_server'),
+        'mail_port': mail_config_cache.get('mail_port'),
+        'mail_security': mail_config_cache.get('mail_security'),
+        'mail_username': mail_config_cache.get('mail_username'),
+        'mail_password': mail_config_cache.get('mail_password'),
         'notify_unit': notification_config.notify_unit,
         'notify_interval': notification_config.notify_interval,
     }
@@ -450,42 +475,40 @@ def notify():
         mail_password_form = request.form.get('mail_password')
         # Update the data in 'notify_config' div and config object (if required).
         if mail_server_form != notify_config['mail_server']:
-            current_app.config['MAIL_SERVER'] = mail_server_form
+
+            cache.set('mail_server', mail_server_form)
             notify_config['mail_server'] = mail_server_form
         if mail_port_form != notify_config['mail_port']:
-            current_app.config['MAIL_PORT'] = mail_port_form
+            cache.set('mail_port', mail_port_form)
             notify_config['mail_port'] = mail_port_form
         if mail_security_form != notify_config['mail_security']:
-            current_app.config['MAIL_SECURITY'] = mail_security_form
+            cache.set('mail_security', mail_security_form)
             notify_config['mail_security'] = mail_security_form
         if mail_username_form != notify_config['mail_username']:
-            current_app.config['MAIL_USERNAME'] = mail_username_form
+            cache.set('mail_username', mail_username_form)
             notify_config['mail_username'] = mail_username_form
         if mail_password_form:
-            current_app.config['MAIL_PASSWORD'] = mail_password_form
-        # check weather some scheduler jobs exist
-        # if scheduler.running:
-        # print(scheduler.get_jobs())
-
+            cache.set('mail_password', mail_password_form)
+            notify_config['mail_password'] = mail_password_form
         # Test mail configuration before running service
         if notify_status_form == 'on':
-            test_mail_config = smtp_mail.test_email()
-            current_app.config['NOTIFICATION_SERVICE_STATUS'] = True
+            test_mail_config = smtp_mail.test_email(notify_config['mail_server'],
+                                                    notify_config['mail_port'],
+                                                    notify_config['mail_security'],
+                                                    notify_config['mail_username'],
+                                                    notify_config['mail_password'])
         else:
             test_mail_config = False
         # Test mail configuration before running service.
         if not notify_status_form and scheduler.get_jobs():
             scheduler.remove_job('my_job_id')
             current_app.logger_admin.info(f'Notification service has been turned off by "{current_user.username}"')
-            current_app.config['NOTIFICATION_SERVICE_STATUS'] = False
             flash('The notify service has been turned off!', 'success')
         elif scheduler.get_jobs() and not test_mail_config:
             scheduler.remove_job('my_job_id')
-            current_app.config['NOTIFICATION_SERVICE_STATUS'] = False
         elif notify_status_form == 'on' and test_mail_config:
             if not scheduler.get_jobs():
                 current_app.logger_admin.info(f'Notification service has been started by "{current_user.username}"')
-                current_app.config['NOTIFICATION_SERVICE_STATUS'] = True
             else:
                 current_app.logger_admin.info(f'Notification service config has been changed by '
                                               f'"{current_user.username}"')
@@ -510,7 +533,7 @@ def notify():
         # Update the rest of the data in 'notify_config' dic.
         notify_config['notify_unit'] = notify_unit_form
         notify_config['notify_interval'] = notify_interval_form
-
+    # Determine weather some scheduler jobs exist - if True, notification service is running
     service_run = True if scheduler.get_jobs() else False
     return render_template('admin/notify.html', service_run=service_run, **notify_config)
 
@@ -562,6 +585,33 @@ def logs():
                            next_url=next_url,
                            prev_url=prev_url,
                            logs_per_page=logs_per_page)
+
+
+@admin_bp.route('/logs_clear')
+@login_required
+@admin_required
+def logs_clear():
+    """
+    Clear logs.
+    """
+    if request.args.get('range') == 'all':
+        db.session.query(Log).delete()
+        db.session.commit()
+    elif request.args.get('range') == 'day1':
+        Log.delete_expired(1)
+    elif request.args.get('range') == 'week1':
+        Log.delete_expired(7)
+    elif request.args.get('range') == 'week2':
+        Log.delete_expired(14)
+    elif request.args.get('range') == 'month1':
+        Log.delete_expired(31)
+    elif request.args.get('range') == 'month3':
+        Log.delete_expired(90)
+    else:
+        abort(404)
+    flash('Logs from the selected timeframe have been deleted!', 'success')
+    return redirect(url_for('admin_bp.logs'))
+
 
 
 @admin_bp.route('/search_engine', methods=['GET', 'POST'])
@@ -696,7 +746,7 @@ def dashboard():
         search_status = False
     else:
         search_status = True
-    notification_status = current_app.config.get('NOTIFICATION_SERVICE_STATUS')
+    notification_status = True if scheduler.get_jobs() else False
     data = {
         'users_count': users_count,
         'standard_users_count': standard_users_count,

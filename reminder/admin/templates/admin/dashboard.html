@@ -140,13 +140,13 @@
         </div>
     </div>
 </div>
-
 {% endblock body %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/moment.js') }}"></script>
-<script src="{{ url_for('static', filename='js/Chart.js') }}"></script>
-<script src="{{ url_for('static', filename='js/Chart.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<!--<script src="{{ url_for('static', filename='js/Chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/Chart.min.js') }}"></script>-->
 
 <script>
 var timeFormat = 'MMM Do';

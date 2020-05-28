@@ -7,25 +7,19 @@
         Logs
     </div>
     <div class="float-right col">
+
         <form class="form-inline float-right my-2 my-lg-0" action="{{ url_for('admin_bp.search') }}" method="GET">
             <input type="hidden" id="id_sub" name="sub" value="logs">
             <input class="form-control mr-sm-2" type="search" placeholder="Search..." aria-label="Search" name="q" required>
             <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search</button>
         </form>
+        <button class="btn btn-outline-primary my-2 my-sm-0 float-right mr-2" data-toggle="modal" data-target="#clear_logs_modal">Clear logs</button>
     </div>
 </div>
 {% endblock pagehead %}
 
 {% block body %}
-<div class="row">
-    <div class="col-sm-12 col-md-6">
-
-    </div>
-    <div class="col-sm-12 col-md-6">
-
-    </div>
-
-</div>
+{% if logs.items %}
     <table class="table table-hover">
         <thead class="thead-light">
         <tr>
@@ -116,5 +110,43 @@
         </li>
     </ul>
 </nav>
+{% else %}
+<div class="cover-container d-flex h-100 p-3 mx-auto flex-column">
+    <img src="{{ url_for('static', filename='not-found.png') }}" alt="Record not found" class="img-fluid my-auto d-block mx-auto d-block">
+</div>
+{% endif %}
+<!-- Modal -->
+<div class="modal fade bd-example-modal-sm" id="clear_logs_modal" tabindex="-1" role="dialog" aria-labelledby="clear_logs_modal_label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clear_logs_modal_label">Clear application logs</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ url_for('admin_bp.logs_clear') }}" method="GET">
+                <div class="modal-body">
+                    <h6>Please indicate the logs to be deleted:</h6>
+                    <div class="row justify-content-md-center">
+                    <select id="id-clear" style="text-align-last: center; width: 50%" class="form-control" name="range">
+                        <option value="all">All logs</option>
+                        <option value="day1">Older than 1 day</option>
+                        <option value="week1">Older than 1 week</option>
+                        <option value="week2">Older than 2 weeks</option>
+                        <option value="month1" selected>Older than 1 month</option>
+                        <option value="month3">Older than 3 months</option>
+                    </select>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-md-center">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-danger" type="submit">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 {% endblock body %}

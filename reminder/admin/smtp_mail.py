@@ -26,16 +26,11 @@ def email_content(recipients_list, event, smtp_obj, msg):
     current_app.logger_admin.info(f'Email service: all emails have been sent out')
 
 
-def send_email(subject, recipients, event):
+def send_email(subject, recipients, event, mail_server, mail_port, mail_security, mail_sender, mail_pass):
     """
     Function establish connection with SNMP server and send emails to selected recipients.
     """
     recipients_list = recipients
-    mail_sender = current_app.config['MAIL_USERNAME']
-    mail_pass = current_app.config['MAIL_PASSWORD']
-    mail_server = current_app.config['MAIL_SERVER']
-    mail_port = current_app.config['MAIL_PORT']
-    mail_security = current_app.config['MAIL_SECURITY']
     # Create the container email message.
     msg = EmailMessage()
     msg['Subject'] = subject
@@ -61,15 +56,10 @@ def send_email(subject, recipients, event):
         current_app.logger_admin.info(f'Email service: disconected with "{mail_server}:{mail_port}"')
 
 
-def test_email():
+def test_email(mail_server, mail_port, mail_security, mail_sender, mail_pass):
     """
     Test mail server config.
     """
-    mail_sender = current_app.config['MAIL_USERNAME']
-    mail_pass = current_app.config['MAIL_PASSWORD']
-    mail_server = current_app.config['MAIL_SERVER']
-    mail_port = current_app.config['MAIL_PORT']
-    mail_security = current_app.config['MAIL_SECURITY']
     try:
         if mail_security == 'tls':
             with smtplib.SMTP(host=mail_server, port=mail_port, timeout=5) as smtp_obj:
