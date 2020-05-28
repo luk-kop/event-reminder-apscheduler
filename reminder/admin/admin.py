@@ -450,6 +450,7 @@ def notify():
     """
     Func allows to start notification service and change the service configuration.
     """
+    print(scheduler.get_jobs(jobstore='default'))
     mail_config_cache = cache.get_dict('mail_server', 'mail_port', 'mail_security', 'mail_username', 'mail_password')
     # Notification config data (for interval and interval unit).
     notification_config = Notification.query.first()

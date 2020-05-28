@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+
 
 basedir = Path(__file__).resolve().parent
 load_dotenv(os.path.join(basedir, '.env'))
@@ -21,23 +23,28 @@ class Config:
     # Cookies lifetime is 1800 sek (30 min).
     PERMANENT_SESSION_LIFETIME = 1800
 
-    # Cache config
+    # Cache Config
     CACHE_TYPE = 'filesystem'
     CACHE_DIR = basedir.joinpath('tmp')
     CACHE_DEFAULT_TIMEOUT = 0
     # CACHE_THRESHOLD = 4
 
     # Database Config
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Custom Config
     USER_DEFAULT_PASS = os.environ.get('USER_DEFAULT_PASS')
 
-    # Email config
+    # Email Config
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = os.environ.get('MAIL_PORT')
     MAIL_SECURITY = 'tls'
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+
+    # Apscheduler Config
+    SCHEDULER_JOBSTORES = {
+        'default': SQLAlchemyJobStore(url=os.environ.get('DATABASE_URL_SCHEDULAR'))
+    }

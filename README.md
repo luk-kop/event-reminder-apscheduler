@@ -42,8 +42,10 @@ To run application successfully the environment variables should be stored in `.
 
 ```
 # '.env' file
-SECRET_KEY='use-some-random-key'
-USER_DEFAULT_PASS='provide-some-default-pass'
+SECRET_KEY=use-some-random-key
+USER_DEFAULT_PASS=provide-some-default-pass
+DATABASE_URL=sqlite:///app.db
+DATABASE_URL_SCHEDULAR=sqlite:///schedular.db
 MAIL_SERVER=smtp.example.com
 MAIL_PORT=587
 MAIL_USERNAME=xxx.yyy@example.com           # account which will be used for SMTP email service

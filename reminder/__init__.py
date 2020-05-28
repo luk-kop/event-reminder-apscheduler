@@ -42,20 +42,20 @@ def register_extensions(app):
     Register Flask extensions.
     """
     # Initialize Plugins
-    # create SQLAlchemy instance:
+    # Create SQLAlchemy instance:
     db.init_app(app)
-    # enable CSRF protection globally for Flask app
+    # Enable CSRF protection globally for Flask app
     csrf.init_app(app)
-    # use for user log in
+    # Use for user log in
     login_manager.init_app(app)
-    # tell login_manager where cane find login page (here 'login' function)
+    # Tell login_manager where cane find login page (here 'login' function)
     login_manager.login_view = 'auth_bp.login'
     login_manager.login_message_category = 'info'
-    # initialize apscheduler obj for background task
+    # Initialize Apscheduler obj for background task
     if not scheduler.running:
         scheduler.init_app(app)
         scheduler.start()
-    # initialize ElasticSearch
+    # Initialize ElasticSearch
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) if app.config['ELASTICSEARCH_URL'] else None
     cache.init_app(app)
 
@@ -78,7 +78,7 @@ def configure_logger(app):
     if not os.path.exists(logs_dir):
         os.mkdir(logs_dir)
 
-    # create dedicated loggers
+    # Create dedicated loggers
     app.logger_general = logging.getLogger("main")
     my_formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', '%Y-%m-%d %H:%M:%S')
     file_handler = RotatingFileHandler(f'{logs_dir}/app.log', maxBytes=30720, backupCount=5)
@@ -88,8 +88,8 @@ def configure_logger(app):
 
     app.logger_general.addHandler((DatabaseHandler(db.session)))
 
-    # customized logger attached to the application is convenient because anywhere in the application I can use current_app.logger.. to access it.
-    # auth logger
+    # Customized logger attached to the application is convenient because anywhere in the application I can use current_app.logger.. to access it.
+    # Auth logger
     app.logger_auth = logging.getLogger("auth")
     file_handler_auth = RotatingFileHandler(f'{logs_dir}/auth.log', maxBytes=30720, backupCount=5)
     file_handler_auth.setFormatter(my_formatter)
@@ -98,7 +98,7 @@ def configure_logger(app):
 
     app.logger_auth.addHandler((DatabaseHandler(db.session)))
 
-    # admin logger
+    # Admin logger
     app.logger_admin = logging.getLogger("admin")
     file_handler_admin = RotatingFileHandler(f'{logs_dir}/admin.log', maxBytes=30720, backupCount=5)
     file_handler_admin.setFormatter(my_formatter)
