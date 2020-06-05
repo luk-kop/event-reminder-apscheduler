@@ -476,7 +476,6 @@ def notify():
         mail_password_form = request.form.get('mail_password')
         # Update the data in 'notify_config' div and config object (if required).
         if mail_server_form != notify_config['mail_server']:
-
             cache.set('mail_server', mail_server_form)
             notify_config['mail_server'] = mail_server_form
         if mail_port_form != notify_config['mail_port']:

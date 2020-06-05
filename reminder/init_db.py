@@ -65,7 +65,7 @@ class Event(Base):
     """Events that will be notified"""
     __tablename__ = 'event'
     id = Column(Integer, primary_key=True)
-    title = Column(String(40), nullable=False)
+    title = Column(String(100), nullable=False)
     details = Column(String(300))
     time_creation = Column(DateTime, index=True, default=datetime.utcnow)
     all_day_event = Column(Boolean, nullable=False)

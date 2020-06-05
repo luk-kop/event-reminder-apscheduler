@@ -44,13 +44,13 @@ To run application successfully the environment variables should be stored in `.
 # '.env' file
 SECRET_KEY=use-some-random-key
 USER_DEFAULT_PASS=provide-some-default-pass
-DATABASE_URL=sqlite:///app.db
-DATABASE_URL_SCHEDULAR=sqlite:///schedular.db
+DATABASE_URL=sqlite:///app.db                   # example for SQLite
+DATABASE_URL_SCHEDULAR=sqlite:///schedular.db   # example for SQLite
 MAIL_SERVER=smtp.example.com
 MAIL_PORT=587
-MAIL_USERNAME=xxx.yyy@example.com           # account which will be used for SMTP email service
-MAIL_PASSWORD=xxxxxxx                       # password for above account
-ELASTICSEARCH_URL=http://localhost:9200     # optional 
+MAIL_USERNAME=xxx.yyy@example.com               # account which will be used for SMTP email service
+MAIL_PASSWORD=xxxxxxx                           # password for above account
+ELASTICSEARCH_URL=http://localhost:9200         # optional 
 ```
 The `.env` file will be imported by application on startup.
 

@@ -70,6 +70,7 @@ user_to_event = db.Table('user_to_event',
 
 class Role(db.Model):
     """User's roles"""
+    __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
     description = db.Column(db.String(255))
@@ -84,6 +85,7 @@ class User(UserMixin, db.Model):
     """
     Table of users authorized to add new events.
     """
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(40), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
@@ -100,6 +102,7 @@ class User(UserMixin, db.Model):
     # Weather user can login by login page and add new notify records.
     access_granted = db.Column(db.Boolean, nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+    # role = db.relationship('Role', backref=db.backref('users', lazy='dynamic'))
     last_seen = db.Column(db.DateTime)
     creation_date = db.Column(db.DateTime, default=datetime.utcnow)
     failed_login_attempts = db.Column(db.Integer, default=0)
@@ -131,6 +134,7 @@ class Event(SearchableMixin, db.Model):
     """
     Events that will be notified.
     """
+    __tablename__ = 'events'
     __searchable__ = ['is_active', 'title', 'details']
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -166,6 +170,7 @@ class Notification(db.Model):
 
 
 class Log(SearchableMixin, db.Model):
+    __tablename__ = 'logs'
     __searchable__ = ['msg']
     id = db.Column(db.Integer, primary_key=True)
     log_name = db.Column(db.String(20))

@@ -8,3 +8,4 @@ start_app.sh
 logs/
 tmp/
 .idea/
+baza_dump.sql
