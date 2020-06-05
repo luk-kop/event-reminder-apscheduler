@@ -9,9 +9,9 @@ from elasticsearch import Elasticsearch
 
 # Local app imports
 from config import Config
-from reminder.main import main
-from reminder.auth import auth
-from reminder.admin import admin
+from reminder.main import views as main_views
+from reminder.auth import views as auth_views
+from reminder.admin import views as admin_views
 from reminder.extensions import (
     db,
     login_manager,
@@ -64,9 +64,9 @@ def register_blueprints(app):
     """
     Register Flask blueprints.
     """
-    app.register_blueprint(main.main_bp)
-    app.register_blueprint(auth.auth_bp, url_prefix='/auth')
-    app.register_blueprint(admin.admin_bp, url_prefix='/admin')
+    app.register_blueprint(main_views.main_bp)
+    app.register_blueprint(auth_views.auth_bp, url_prefix='/auth')
+    app.register_blueprint(admin_views.admin_bp, url_prefix='/admin')
 
 
 def configure_logger(app):

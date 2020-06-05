@@ -8,9 +8,9 @@ from sqlalchemy import func, or_, and_
 import elasticsearch.exceptions
 
 from reminder.extensions import db
-from reminder.models import User, Event, Log
+from reminder.models import User, Event
 from reminder.custom_decorators import admin_required, login_required, cancel_click
-from reminder.admin.admin import test_pattern
+from reminder.admin.views import test_pattern
 
 
 main_bp = Blueprint('main_bp', __name__,

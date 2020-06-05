@@ -11,7 +11,7 @@ import elasticsearch.exceptions
 
 from reminder.extensions import db, scheduler, cache
 from reminder.models import Role, User, Event, Notification, Log
-from reminder.main import main
+from reminder.main import views as main_views
 from reminder.admin import smtp_mail
 from reminder.custom_decorators import admin_required, login_required, cancel_click
 
@@ -187,20 +187,20 @@ def event(event_id):
         event.all_day_event = True if request.form.get('allday') == 'True' else False
         event.to_notify = True if request.form.get('to_notify') == 'True' else False
         if request.form.get('date_notify'):
-            event.time_notify = main.str_to_datetime(request.form.get('date_notify'),
+            event.time_notify = main_views.str_to_datetime(request.form.get('date_notify'),
                                                      request.form.get('time_notify'))
         else:
             event.time_notify = None
         event.notification_sent = True if request.form.get('notify_sent') == 'True' else False
         # Check if event ia all_day event or not.
         if request.form.get('time_event_start'):
-            time_event_start_db = main.str_to_datetime(request.form.get('date_event_start'),
+            time_event_start_db = main_views.str_to_datetime(request.form.get('date_event_start'),
                                                   request.form.get('time_event_start'))
-            time_event_stop_db = main.str_to_datetime(request.form.get('date_event_stop'),
+            time_event_stop_db = main_views.str_to_datetime(request.form.get('date_event_stop'),
                                                  request.form.get('time_event_stop'))
         else:
-            time_event_start_db = main.str_to_datetime(request.form.get('date_event_start'))
-            time_event_stop_db = main.str_to_datetime(request.form.get('date_event_stop'))
+            time_event_start_db = main_views.str_to_datetime(request.form.get('date_event_start'))
+            time_event_stop_db = main_views.str_to_datetime(request.form.get('date_event_stop'))
         event.time_event_start = time_event_start_db
         event.time_event_stop = time_event_stop_db
         # Set users to notify. If "to_notify = False" the list "user_form" is []
