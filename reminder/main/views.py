@@ -309,7 +309,7 @@ def event(event_id):
         # Set users to notify. If "to_notify = False" the list "user_form" is []
         users_form = request.form.getlist('notified_user')
         # Overwrite current users to notify.
-        event.notified_uids = [User.query.get(user_id) for user_id in users_form]
+        event.notified_users = [User.query.get(user_id) for user_id in users_form]
         db.session.commit()
         flash('Your changes have been saved!', 'success')
         current_app.logger_general.info(f'Event with id={event.id} has been changed by "{current_user}"')

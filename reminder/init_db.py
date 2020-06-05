@@ -28,7 +28,7 @@ class Role(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(80), unique=True)
     description = Column(String(255))
-    users_id = relationship('User', backref='role', lazy='dynamic')
+    users = relationship('User', backref='role', lazy='dynamic')
 
 
 # Many-To-Many table
@@ -52,7 +52,7 @@ class User(Base):
                                   cascade='all, delete-orphan')
     events_notified = relationship('Event',
                                    secondary=user_to_event,
-                                   back_populates='notified_uids')
+                                   back_populates='notified_users')
     access_granted = Column(Boolean, nullable=False)
     role_id = Column(Integer, ForeignKey('role.id'))
     last_seen = Column(DateTime)
@@ -76,7 +76,7 @@ class Event(Base):
     author_uid = Column(Integer, ForeignKey('user.id'))
     notification_sent = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
-    notified_uids = relationship('User',
+    notified_users = relationship('User',
                                  secondary=user_to_event,
                                  back_populates='events_notified')
 
@@ -105,7 +105,6 @@ class Log(Base):
 
 
 if __name__ == '__main__':
-
     db_name = input('\nEnter name for DB [app.db]: ')
     if not db_name:
         db_name = 'app.db'
@@ -637,7 +636,7 @@ if __name__ == '__main__':
     for event in session.query(Event).filter(Event.to_notify == True).all():
         # No more than 3 users to to be notified.
         for user in random.sample(users_ids, k=random.randint(1, 3)):
-            event.notified_uids.append(user)
+            event.notified_users.append(user)
 
     session.commit()
 

@@ -73,14 +73,14 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
     description = db.Column(db.String(255))
-    users_id = db.relationship('User', backref='role', lazy='dynamic')
+    # Role.query.filter(Role.name=="user").first().users_id.all() - return all users
+    users = db.relationship('User', backref='role', lazy='dynamic')
 
     def __repr__(self):
         return f'{self.name}'
 
 
 class User(UserMixin, db.Model):
-    # __searchable__ = ['username', 'email']
     """
     Table of users authorized to add new events.
     """
@@ -96,7 +96,7 @@ class User(UserMixin, db.Model):
                                      cascade='all, delete-orphan')
     events_notified = db.relationship('Event',
                                       secondary=user_to_event,
-                                      back_populates='notified_uids')
+                                      back_populates='notified_users')
     # Weather user can login by login page and add new notify records.
     access_granted = db.Column(db.Boolean, nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
@@ -131,7 +131,6 @@ class Event(SearchableMixin, db.Model):
     """
     Events that will be notified.
     """
-    __tablename__ = 'event'
     __searchable__ = ['is_active', 'title', 'details']
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -149,7 +148,7 @@ class Event(SearchableMixin, db.Model):
     notification_sent = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     # Who should be notified.
-    notified_uids = db.relationship('User',
+    notified_users = db.relationship('User',
                                     secondary=user_to_event,
                                     back_populates='events_notified')
 

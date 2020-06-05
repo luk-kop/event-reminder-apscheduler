@@ -102,7 +102,7 @@
             {% if event.to_notify %}
             <select class="form-control" style="text-align-last: center" id="id-notified_user" name="notified_user" multiple size="3" required>
                 {% for user in users %}
-                {% if user in event.notified_uids %}
+                {% if user in event.notified_users %}
                 <option value="{{ user.id }}" selected>{{ user.username }}</option>
                 {% else %}
                 <option value="{{ user.id }}">{{ user.username }}</option>
