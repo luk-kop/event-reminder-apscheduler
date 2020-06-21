@@ -8,7 +8,7 @@ from flask import Flask
 from elasticsearch import Elasticsearch
 
 # Local app imports
-from config import Config
+from config import DevConfig, ProdConfig
 from reminder.main import views as main_views
 from reminder.auth import views as auth_views
 from reminder.admin import views as admin_views
@@ -29,8 +29,10 @@ def create_app():
     """
     app = Flask(__name__)
     with app.app_context():
-        # Application Configuration
-        app.config.from_object(Config)
+        # Application Config for development
+        app.config.from_object(DevConfig)
+        # Application Config for production
+        # app.config.from_object(ProdConfig)
         register_extensions(app)
         register_blueprints(app)
         configure_logger(app)

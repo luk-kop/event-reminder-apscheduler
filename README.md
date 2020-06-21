@@ -44,7 +44,7 @@ To run application successfully the environment variables should be stored in `.
 # '.env' file
 SECRET_KEY=use-some-random-key
 USER_DEFAULT_PASS=provide-some-default-pass
-DATABASE_URL=sqlite:///app.db                   # example for SQLite
+DEV_DATABASE_URL=sqlite:///app.db                   # example for SQLite for development
 DATABASE_URL_SCHEDULAR=sqlite:///schedular.db   # example for SQLite
 MAIL_SERVER=smtp.example.com
 MAIL_PORT=587

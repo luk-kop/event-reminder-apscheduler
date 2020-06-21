@@ -38,7 +38,7 @@ def login():
                                       f'{request.user_agent.version}')
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.access_granted or not user.check_password(form.password.data):
-            flash('Login Unsuccessful. Please check username and password', 'danger')
+            flash('Login Unsuccessful. Please check username and password!', 'danger')
             current_app.logger_auth.warning(f'Failed to log in. Username data entered: "{form.username.data}"')
             if user and user.access_granted:
                 user.failed_login_attempts += 1
