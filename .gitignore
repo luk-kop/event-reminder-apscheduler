@@ -3,6 +3,7 @@ __pycache__/
 
 .env
 event_env/
+venv-reminder/
 start_app.sh
 *.db
 logs/
