@@ -51,12 +51,12 @@ document.getElementById("id-allday").onchange = function () {
     };
 
     function validateTimeEvent() {
-    var date_start = document.getElementById("id-date_event_start");
-    var date_stop = document.getElementById("id-date_event_stop");
-    var time_start = document.getElementById("id-time_event_start");
-    var time_stop = document.getElementById("id-time_event_stop");
-    var date_notify = document.getElementById("id-date_notify");
-    var all_day = document.getElementById("id-allday");
+    let date_start = document.getElementById("id-date_event_start");
+    let date_stop = document.getElementById("id-date_event_stop");
+    let time_start = document.getElementById("id-time_event_start");
+    let time_stop = document.getElementById("id-time_event_stop");
+    let date_notify = document.getElementById("id-date_notify");
+    let all_day = document.getElementById("id-allday");
 
 
     if ((all_day.value == 'True') && (this == date_start)) {
@@ -79,8 +79,8 @@ document.getElementById("id-allday").onchange = function () {
     };
 
     function validateNotifyTimeEvent() {
-    var date_start = document.getElementById("id-date_event_start");
-    var date_notify = document.getElementById("id-date_notify");
+    let date_start = document.getElementById("id-date_event_start");
+    let date_notify = document.getElementById("id-date_notify");
     if (date_start.value < date_notify.value) {
         date_notify.setCustomValidity("Should be earlier than the start date.");
     } else {

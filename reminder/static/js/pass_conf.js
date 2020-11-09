@@ -1,7 +1,7 @@
 
 window.onload = function () {
-                var txtPassword = document.getElementById("id-password");
-                var txtConfirmPassword = document.getElementById("id-password2");
+                let txtPassword = document.getElementById("id-password");
+                let txtConfirmPassword = document.getElementById("id-password2");
                 txtPassword.onchange = ConfirmPassword;
                 txtConfirmPassword.onkeyup = ConfirmPassword;
                 function ConfirmPassword() {
