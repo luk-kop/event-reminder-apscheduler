@@ -11,7 +11,7 @@
     <div class="form-row">
         <div class="col-md-5 mb-3">
             <label for="id-username">Username</label>
-            <input type="text" class="form-control" value="{{ user.username }}" id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$" title="Username should contain chars: a-z, A-Z, 0-9, . _ -" required>
+            <input type="text" class="form-control" value="{{ user.username }}" id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{1,39}[a-zA-Z0-9]$" title="Username should contain chars: a-z, A-Z, 0-9, . _ -" required>
         </div>
         <div class="col-md-5 mb-3">
             <label for="id-email">Email</label>
@@ -64,7 +64,7 @@
     <div class="form-row">
         <div class="col-md-5 mb-3">
             <label for="id-password">Password</label>
-            <input type="password" class="form-control" placeholder="New password..." id="id-password" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" title="Password must contain minimum 8 characters, at least one letter, one number and one special character" name="password" min="0" max="40">
+            <input type="password" class="form-control" placeholder="New password..." id="id-password" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,40}$" title="Password must contain minimum 8 characters, at least one letter, one number and one special character" name="password" min="8" max="40">
         </div>
         <div class="col-md-5 mb-3">
             <label for="id-password2">Confirm password</label>

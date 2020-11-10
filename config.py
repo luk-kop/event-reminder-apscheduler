@@ -30,8 +30,6 @@ class Config:
     # Database Config
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # Custom Config
-    USER_DEFAULT_PASS = os.environ.get('USER_DEFAULT_PASS')
     # Email Config
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = os.environ.get('MAIL_PORT')

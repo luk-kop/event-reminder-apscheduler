@@ -4,7 +4,7 @@ from werkzeug.urls import url_parse
 
 from reminder.extensions import db
 from reminder.models import User
-from reminder.forms import LoginForm
+from reminder.auth.forms import LoginForm
 from reminder.custom_decorators import login_required, cancel_click
 
 

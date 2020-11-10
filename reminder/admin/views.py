@@ -14,6 +14,8 @@ from reminder.models import Role, User, Event, Notification, Log
 from reminder.main import views as main_views
 from reminder.admin import smtp_mail
 from reminder.custom_decorators import admin_required, login_required, cancel_click
+from reminder.admin.forms import NewUserForm, EditUserForm
+from reminder.custom_wtforms import flash_errors
 
 
 admin_bp = Blueprint('admin_bp', __name__,
@@ -82,10 +84,14 @@ def background_job():
             scheduler.remove_job('my_job_id')
 
 
-def test_pattern(item_pattern, item):
+def test_pattern(pattern_type, item):
     """
     Validate user input on server-side.
     """
+    if pattern_type == 'date':
+        item_pattern = r'^\d{4}-(0[1-9]|[1][0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$'
+    else:
+        return False
     pattern = re.compile(item_pattern)
     if re.match(pattern, item):
         return True
@@ -293,41 +299,29 @@ def new_user():
     Add new user to db.
     """
     if request.method == "POST":
-        # Check if username and email already exist in db.
-        form_content = check_user_exist(request)
-        if form_content:
-            return render_template('admin/new_user.html', title='New user', form_content=form_content)
-        username_form = request.form.get('username')
-        email_form = request.form.get('email')
-        password_form = request.form.get('password')
-        # Validate form data on server-side
-        pattern_username = r'^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$'
-        pattern_email = r'^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$'
-        pattern_password = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,40}$'
-        if not test_pattern(pattern_username, username_form):
-            flash(f'Please enter valid username. Username should contain chars: a-z, A-Z, 0-9, . _ -', 'danger')
-            return redirect(url_for('admin_bp.new_user'))
-        if not test_pattern(pattern_email, email_form):
-            flash(f'Please enter valid email address', 'danger')
-            return redirect(url_for('admin_bp.new_user'))
-        user = User(username=username_form,
-                    email=email_form,
-                    access_granted=True if request.form.get('access') == 'True' else False,
-                    pass_change_req=True if request.form.get('pass_reset') == 'True' else False,
-                    role_id=str(Role.query.filter_by(name=request.form.get('role')).first().id))
-        if password_form:
-            if not test_pattern(pattern_password, password_form):
-                flash(f'Password must contain minimum 8 characters, at least one letter, one number and one special '
-                      f'character', 'danger')
-                return redirect(url_for('admin_bp.new_user'))
+        form = NewUserForm()
+        if form.validate_on_submit():
+            # Validate form data on server-side
+            # Check if username and email already exist in db.
+            form_content = check_user_exist(request)
+            if form_content:
+                return render_template('admin/new_user.html', title='New user', form_content=form_content)
+            username_form = request.form.get('username')
+            email_form = request.form.get('email')
+            password_form = request.form.get('password')
+            user = User(username=username_form,
+                        email=email_form,
+                        access_granted=True if request.form.get('access') == 'True' else False,
+                        pass_change_req=True if request.form.get('pass_reset') == 'True' else False,
+                        role_id=str(Role.query.filter_by(name=request.form.get('role')).first().id))
             user.set_password(password_form)
-        else:
-            user.set_password(current_app.config['USER_DEFAULT_PASS'])
-        db.session.add(user)
-        db.session.commit()
-        current_app.logger_admin.info(f'User "{user.username}" has been added to db')
-        flash(f'User "{user.username}" has been added!', 'success')
-        return redirect(url_for('admin_bp.users'))
+            db.session.add(user)
+            db.session.commit()
+            current_app.logger_admin.info(f'User "{user.username}" has been added to db')
+            flash(f'User "{user.username}" has been added!', 'success')
+            return redirect(url_for('admin_bp.users'))
+        if form.errors:
+            flash_errors(form)
     return render_template('admin/new_user.html', title='New user')
 
 
@@ -341,41 +335,32 @@ def user(user_id):
     """
     user = User.query.filter_by(id=user_id).first_or_404()
     if request.method == "POST":
-        # Check if new assigned username or email exist in db.
-        form_content = check_user_exist(request, user)
-        if form_content:
-            return render_template('admin/user.html', user=user)
-        username_form = request.form.get('username')
-        email_form = request.form.get('email')
-        password_form = request.form.get('password')
-        # Validate form data on server-side
-        pattern_username = r'^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$'
-        pattern_email = r'^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$'
-        pattern_password = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,40}$'
-        if not test_pattern(pattern_username, username_form):
-            flash(f'Please enter valid username. Username should contain chars: a-z, A-Z, 0-9, . _ -', 'danger')
-            return redirect(url_for('admin_bp.new_user'))
-        if not test_pattern(pattern_email, email_form):
-            flash(f'Please enter valid email address', 'danger')
-            return redirect(url_for('admin_bp.new_user'))
-        user.username = username_form
-        user.email = email_form
-        if request.form.get('access') == 'True' and str(user.access_granted) != request.form.get('access'):
-            user.failed_login_attempts = 0
-        user.access_granted = True if request.form.get('access') == 'True' else False
-        user.pass_change_req = True if request.form.get('pass_reset') == 'True' else False
-        user.role_id = str(Role.query.filter_by(name=request.form.get('role')).first().id)
-        # Check whether password has been changed
-        if password_form and not user.check_password(password_form):
-            if not test_pattern(pattern_password, password_form):
-                flash(f'Password must contain minimum 8 characters, at least one letter, one number and one special '
-                      f'character', 'danger')
+        form = EditUserForm()
+        if form.validate_on_submit():
+            # Validate form data on server-side
+            # Check if new assigned username or email exist in db.
+            form_content = check_user_exist(request, user)
+            if form_content:
                 return render_template('admin/user.html', user=user)
-            user.set_password(password_form)
-        db.session.commit()
-        current_app.logger_admin.info(f'User "{user.username}" data has been changed')
-        flash('Your changes have been saved!', 'success')
-        return redirect(url_for('admin_bp.users'))
+            username_form = request.form.get('username')
+            email_form = request.form.get('email')
+            password_form = request.form.get('password')
+            user.username = username_form
+            user.email = email_form
+            if request.form.get('access') == 'True' and str(user.access_granted) != request.form.get('access'):
+                user.failed_login_attempts = 0
+            user.access_granted = True if request.form.get('access') == 'True' else False
+            user.pass_change_req = True if request.form.get('pass_reset') == 'True' else False
+            user.role_id = str(Role.query.filter_by(name=request.form.get('role')).first().id)
+            # Check whether password has been changed
+            if password_form and not user.check_password(password_form):
+                user.set_password(password_form)
+            db.session.commit()
+            current_app.logger_admin.info(f'User "{user.username}" data has been changed')
+            flash('Your changes have been saved!', 'success')
+            return redirect(url_for('admin_bp.users'))
+        if form.errors:
+            flash_errors(form)
     return render_template('admin/user.html', user=user)
 
 

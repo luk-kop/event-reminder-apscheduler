@@ -205,24 +205,22 @@ def event_validation(request):
     Validate user input on server-side
     """
     print(request.form)
+    # dodac sprawdzenie 'allday' 'to_notify' 'nofied_users'
     title_form = request.form.get('title')
     date_event_start_form = request.form.get('date_event_start')
     date_event_stop_form = request.form.get('date_event_stop')
     date_event_notify_form = request.form.get('date_notify')
-    pattern_date = r'^\d{4}-(0[1-9]|[1][0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$'
-
     # date_event_start, date_event_start, date_notify, 2020-05-26
-    # pattern_username = r'^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$'
     if not title_form or len(title_form) > Event.title.type.length:
         flash(f'Please enter event\'s title!', 'danger')
         return False
-    if not date_event_start_form or not test_pattern(pattern_date, date_event_start_form):
+    if not date_event_start_form or not test_pattern('date', date_event_start_form):
         flash(f'Please enter valid start day!', 'danger')
         return False
-    if not date_event_stop_form or not test_pattern(pattern_date, date_event_stop_form):
+    if not date_event_stop_form or not test_pattern('date', date_event_stop_form):
         flash(f'Please enter valid stop day!', 'danger')
         return False
-    if date_event_notify_form and not test_pattern(pattern_date, date_event_notify_form):
+    if date_event_notify_form and not test_pattern('date', date_event_notify_form):
         flash(f'Please enter valid notify day!', 'danger')
         return False
     return True
@@ -289,6 +287,9 @@ def event(event_id):
     users_to_notify = User.query.filter_by(role_id=2).all()
     today = datetime.date.today().strftime("%Y-%m-%d")
     if request.method == "POST":
+        # Form validation - sever-side
+        if not event_validation(request):
+            return redirect(url_for('main_bp.event', event_id=event_id))
         event.title = request.form.get('title')
         event.details = request.form.get('details')
         event.to_notify = True if request.form.get('to_notify') == 'True' else False
