@@ -118,6 +118,10 @@ class User(UserMixin, db.Model):
         if self.role.name == 'admin':
             return True
 
+    @classmethod
+    def get_all_standard_users(cls):
+        return cls.query.filter_by(role_id=2).all()
+
     def user_seen(self):
         self.last_seen = datetime.utcnow()
 

@@ -84,21 +84,6 @@ def background_job():
             scheduler.remove_job('my_job_id')
 
 
-def test_pattern(pattern_type, item):
-    """
-    Validate user input on server-side.
-    """
-    if pattern_type == 'date':
-        item_pattern = r'^\d{4}-(0[1-9]|[1][0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$'
-    else:
-        return False
-    pattern = re.compile(item_pattern)
-    if re.match(pattern, item):
-        return True
-    else:
-        return False
-
-
 @admin_bp.route('/events')
 @login_required
 @admin_required
