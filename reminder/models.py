@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, AnonymousUserMixin
+from sqlalchemy import func
 
 from reminder.extensions import db, login_manager
 from reminder.search import add_to_index, remove_from_index, query_index
@@ -119,8 +120,15 @@ class User(UserMixin, db.Model):
             return True
 
     @classmethod
-    def get_all_standard_users(cls):
-        return cls.query.filter_by(role_id=2).all()
+    def get_all_standard_users(cls, sort=True):
+        """
+        Method provides a list of users with 'user' role.
+        """
+        if sort:
+            users = cls.query.filter(cls.role_id == 2).order_by(func.lower(User.username).asc()).all()
+        else:
+            users = cls.query.filter(cls.role_id == 2).all()
+        return users
 
     def user_seen(self):
         self.last_seen = datetime.utcnow()

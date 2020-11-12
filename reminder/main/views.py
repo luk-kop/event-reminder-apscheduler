@@ -4,7 +4,7 @@ import time
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort, current_app, session
 from flask_login import current_user
 from werkzeug.exceptions import HTTPException
-from sqlalchemy import func, or_, and_
+from sqlalchemy import or_, and_
 import elasticsearch.exceptions
 
 from reminder.extensions import db
@@ -67,7 +67,7 @@ def events_authors_func(today, today_only_day):
                                                                         and_(Event.all_day_event == True,
                                                                              Event.time_event_stop == today_only_day))),
                                                                Event.is_active == True, ).all()])
-    users = User.query.filter(User.role_id == 2).order_by(func.lower(User.username).asc()).all()
+    users = User.get_all_standard_users()
     # Check whether user is author (prepare list of authors)
     event_authors = [user for user in users if user.id in author_ids]
     return event_authors, author_ids
@@ -208,14 +208,12 @@ def new_event():
     """
     Add new event to db.
     """
-    # users_to_notify = User.query.filter_by(role_id=2).all()
     users_to_notify = User.get_all_standard_users()
     today = datetime.date.today().strftime("%Y-%m-%d")
     if request.method == "POST":
         form = NewEventForm()
         # Add list of valid choices to 'notified_user' field (adding from an app context)
         form.notified_user.choices = [(str(user.id), user.username) for user in users_to_notify]
-        print(request.form)
         # Form validation - sever-side
         if form.validate_on_submit():
             # Date collected from html form
@@ -250,7 +248,6 @@ def new_event():
             if to_notify_db:
                 event.time_notify = time_notify_db
             db.session.add(event)
-            # db.session.commit()
             # Assign user
             for user_id in users_form:
                 user = User.query.get(user_id)
@@ -274,39 +271,54 @@ def event(event_id):
     """
     event = Event.query.filter_by(id=event_id).first_or_404()
     # Fetch users that can be notified (only with user role)
-    users_to_notify = User.query.filter_by(role_id=2).all()
+    users_to_notify = User.get_all_standard_users()
     today = datetime.date.today().strftime("%Y-%m-%d")
     if request.method == "POST":
         # Form validation - sever-side
-
-        event.title = request.form.get('title')
-        event.details = request.form.get('details')
-        event.to_notify = True if request.form.get('to_notify') == 'True' else False
-        event.time_notify = str_to_datetime(request.form.get('date_notify'), request.form.get('time_notify')) \
-            if request.form.get('date_notify') else None
-        event.all_day_event = True if request.form.get('allday') == 'True' else False
-        # Check if all day event or not.
-        if request.form.get('time_event_start'):
-            time_event_start_db = str_to_datetime(request.form.get('date_event_start'),
-                                                  request.form.get('time_event_start'))
-            time_event_stop_db = str_to_datetime(request.form.get('date_event_stop'),
-                                                 request.form.get('time_event_stop'))
-        else:
-            time_event_start_db = str_to_datetime(request.form.get('date_event_start'))
-            time_event_stop_db = str_to_datetime(request.form.get('date_event_stop'))
-        event.time_event_start = time_event_start_db
-        event.time_event_stop = time_event_stop_db
-        # Set users to notify. If "to_notify = False" the list "user_form" is []
-        users_form = request.form.getlist('notified_user')
-        # Overwrite current users to notify.
-        event.notified_users = [User.query.get(user_id) for user_id in users_form]
-        db.session.commit()
-        flash('Your changes have been saved!', 'success')
-        current_app.logger_general.info(f'Event with id={event.id} has been changed by "{current_user}"')
-        current_app.logger_general.info(f'Event with id={event.id} has been deactivated by "{current_user}"')
-        if 'prev_endpoint' in session:
-            return redirect(session['prev_endpoint'])
-        return redirect(url_for('main_bp.events_list'))
+        form = NewEventForm()
+        # Add list of valid choices to 'notified_user' field (adding from an app context)
+        form.notified_user.choices = [(str(user.id), user.username) for user in users_to_notify]
+        # Form validation - sever-side
+        if form.validate_on_submit():
+            # Date collected from html form
+            title_form = request.form.get('title')
+            details_form = request.form.get('details')
+            to_notify_form = request.form.get('to_notify')
+            allday_form = request.form.get('allday')
+            date_event_start_form = request.form.get('date_event_start')
+            date_event_stop_form = request.form.get('date_event_stop')
+            time_event_start_form = request.form.get('time_event_start')
+            time_event_stop_form = request.form.get('time_event_stop')
+            date_notify_form = request.form.get('date_notify')
+            time_notify_form = request.form.get('time_notify')
+            users_form = request.form.getlist('notified_user')
+            # Data to db
+            event.title = title_form
+            event.details = details_form
+            event.to_notify = True if to_notify_form == 'True' else False
+            event.time_notify = str_to_datetime(date_notify_form, time_notify_form) if date_notify_form else None
+            event.all_day_event = True if allday_form == 'True' else False
+            # Check if all day event or not.
+            if request.form.get('time_event_start'):
+                time_event_start_db = str_to_datetime(date_event_start_form, time_event_start_form)
+                time_event_stop_db = str_to_datetime(date_event_stop_form, time_event_stop_form)
+            else:
+                time_event_start_db = str_to_datetime(date_event_start_form)
+                time_event_stop_db = str_to_datetime(date_event_stop_form)
+            event.time_event_start = time_event_start_db
+            event.time_event_stop = time_event_stop_db
+            # Set users to notify. If "to_notify = False" the list "user_form" is []
+            # Overwrite current users to notify.
+            event.notified_users = [User.query.get(user_id) for user_id in users_form]
+            db.session.commit()
+            flash('Your changes have been saved!', 'success')
+            current_app.logger_general.info(f'Event with id={event.id} has been changed by "{current_user}"')
+            current_app.logger_general.info(f'Event with id={event.id} has been deactivated by "{current_user}"')
+            if 'prev_endpoint' in session:
+                return redirect(session['prev_endpoint'])
+            return redirect(url_for('main_bp.events_list'))
+        if form.errors:
+            flash_errors(form)
     return render_template('event.html', event=event, title='Edit event', users=users_to_notify, today=today)
 
 
