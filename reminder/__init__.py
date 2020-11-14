@@ -28,11 +28,13 @@ def create_app():
     Construct the core app object.
     """
     app = Flask(__name__)
+    # Application Config for development
+    app.config.from_object(DevConfig)
+    # Application Config for production
+    # app.config.from_object(ProdConfig)
+
     with app.app_context():
-        # Application Config for development
-        app.config.from_object(DevConfig)
-        # Application Config for production
-        # app.config.from_object(ProdConfig)
+        # Initialize Plugins
         register_extensions(app)
         register_blueprints(app)
         configure_logger(app)

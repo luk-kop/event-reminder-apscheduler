@@ -140,6 +140,7 @@
             <div class="input-group-prepend">
                 <span class="input-group-text">Notification already sent?</span>
             </div>
+            {% if event.to_notify %}
             <select class="form-control" style="text-align-last: center" id="id-notify_sent" name="notify_sent">
                 {% if event.notification_sent %}
                 <option value="True" selected>Yes</option>
@@ -149,6 +150,17 @@
                 <option value="False" selected>No</option>
                 {% endif %}
             </select>
+            {% else %}
+                <select class="form-control" style="text-align-last: center" id="id-notify_sent" name="notify_sent" disabled>
+                {% if event.notification_sent %}
+                <option value="True" selected>Yes</option>
+                <option value="False">No</option>
+                {% else %}
+                <option value="True">Yes</option>
+                <option value="False" selected>No</option>
+                {% endif %}
+            </select>
+            {% endif %}
         </div>
     </div>
 

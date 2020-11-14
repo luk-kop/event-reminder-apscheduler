@@ -21,6 +21,7 @@ document.getElementById("id-allday").onchange = function () {
         let time_notify = document.getElementById("id-time_notify");
         let users_notified = document.getElementById("id-notified_user");
         let date_start = document.getElementById("id-date_event_start");
+        let notify_sent = document.getElementById("id-notify_sent");
         let date = new Date();
         let day = date.getDate();
         let month = date.getMonth() + 1;
@@ -35,6 +36,7 @@ document.getElementById("id-allday").onchange = function () {
             date_notify.disabled = true;
             time_notify.disabled = true;
             users_notified.disabled = true;
+            notify_sent.disabled = true;
             }
         else {
             date_notify.disabled = false;
@@ -43,6 +45,7 @@ document.getElementById("id-allday").onchange = function () {
             date_notify.required = true;
             time_notify.required = true;
             users_notified.required = true;
+            notify_sent.disabled = false;
             date_notify.value = today;
             time_notify.value = "08:00";
             if (date_start.value < date_notify.value) {
