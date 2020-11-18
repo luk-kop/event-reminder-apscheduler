@@ -1,7 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SelectField
-from wtforms.validators import InputRequired, EqualTo, Regexp, Length
-from wtforms.fields.html5 import EmailField
+from wtforms import StringField, PasswordField, SelectField, IntegerField
+from wtforms.validators import InputRequired, EqualTo, Regexp, Length, NumberRange, Optional, Email
 
 
 class NewUserForm(FlaskForm):
@@ -13,9 +12,10 @@ class NewUserForm(FlaskForm):
                                        Length(min=3, max=40),
                                        Regexp(regex='^[a-zA-Z0-9][a-zA-Z0-9\._-]{1,39}[a-zA-Z0-9]$',
                                               message='Username should contain chars (min 3): a-z, A-Z, 0-9, . _ -')])
-    email = EmailField(label='Email',
-                       validators=[InputRequired(message='Please enter valid email address'),
-                                   Length(max=70)])
+    email = StringField(label='Email',
+                        validators=[InputRequired(),
+                                    Email(message='Please enter valid email address'),
+                                    Length(max=70)])
     role = SelectField('Role',
                        choices=[('user', 'User'), ('admin', 'Admin')])
     access = SelectField('Can log in?',
@@ -41,3 +41,25 @@ class EditUserForm(NewUserForm):
                                                 message='Password must contain minimum 8 characters, at least one '
                                                         'letter, one number and one special character')])
     password2 = PasswordField(label='Confirm password', validators=[EqualTo('password')])
+
+
+class NotifyForm(FlaskForm):
+    """
+    Validators for notification settings
+    """
+    notify_status = StringField(label='Notification status',
+                                validators=[Regexp(regex='^on$'), Optional()])
+    notify_unit = SelectField('Notification interval time units',
+                              choices=[('hours', 'hours'), ('minutes', 'minutes'), ('seconds', 'seconds')])
+    notify_interval = IntegerField(label='Notification interval',
+                                   validators=[InputRequired(), NumberRange(min=1)])
+    mail_server = StringField(label='Mail server',
+                              validators=[InputRequired(),
+                                          Length(max=70)])
+    mail_port = IntegerField(label='Mail port',
+                             validators=[InputRequired(), NumberRange(min=1)])
+    mail_security = SelectField(label='Mail security',
+                                choices=[('tls', 'TLS'), ('ssl', 'SSL')])
+    mail_username = StringField(label='Mail username',
+                                validators=[InputRequired(),
+                                            Length(max=70)])

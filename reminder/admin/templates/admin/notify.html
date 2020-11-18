@@ -31,9 +31,9 @@
                 <span class="input-group-text">Notification time interval</span>
             </div>
             <select class="form-control" style="text-align-last: center" id="id-notify_unit" name="notify_unit">
-                <option value="hours" {{ 'selected' if notify_unit == 'hours'}}>hours</option>
-                <option value="minutes" {{ 'selected' if notify_unit == 'minutes'}}>minutes</option>
-                <option value="seconds" {{'selected' if notify_unit == 'seconds'}}>seconds</option>
+                <option value="hours" {{ 'selected' if notify_unit == 'hours' }}>hours</option>
+                <option value="minutes" {{' selected' if notify_unit == 'minutes' }}>minutes</option>
+                <option value="seconds" {{' selected' if notify_unit == 'seconds' }}>seconds</option>
             </select>
             <input class="form-control text-center" type="number" id="id-notify_interval" value={{ notify_interval }} name="notify_interval" min="1" max="120">
         </div>
@@ -51,7 +51,7 @@
             <div class="input-group-prepend">
                 <span class="input-group-text">Server port</span>
             </div>
-            <input class="form-control text-center" type="text" id="id-mail_port" name="mail_port" value="{{ mail_port }}" max="50" required>
+            <input class="form-control text-center" type="number" id="id-mail_port" name="mail_port" value="{{ mail_port }}" min="1" max="65535" required>
         </div>
         <div class="input-group col-md-3">
             <div class="input-group-prepend">
