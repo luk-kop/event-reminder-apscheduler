@@ -161,8 +161,8 @@ class Event(SearchableMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)
     # Who should be notified.
     notified_users = db.relationship('User',
-                                    secondary=user_to_event,
-                                    back_populates='events_notified')
+                                     secondary=user_to_event,
+                                     back_populates='events_notified')
 
     def __repr__(self):
         return f'Event {self.title}'

@@ -57,7 +57,8 @@ def background_job():
     """
     with scheduler.app.app_context():
         today = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
-        print(today)    # only for tests
+        # only for tests
+        # print(today)    # only for tests
         events_to_notify = Event.query.filter(Event.time_notify <= today,
                                               Event.is_active == True,
                                               Event.to_notify == True,
@@ -65,7 +66,7 @@ def background_job():
         try:
             for event in events_to_notify:
                 users_to_notify = [user for user in event.notified_users]
-                smtp_mail.send_email('Attention! Upcoming event!',
+                users_notified = smtp_mail.send_email('Attention! Upcoming event!',
                                      users_to_notify,
                                      event,
                                      cache.get('mail_server'),
@@ -73,9 +74,9 @@ def background_job():
                                      cache.get('mail_security'),
                                      cache.get('mail_username'),
                                      cache.get('mail_password'))
-                current_app.logger_admin.info(f'Notification service: notification has been sent to: {users_to_notify}')
+                current_app.logger_admin.info(f'Notification service: notification has been sent to: {users_notified}')
                 # only for test
-                print(f'Mail sent to {users_to_notify}')
+                # print(f'Mail sent to {users_notified}')
                 event.notification_sent = True
             db.session.commit()
         except Exception as error:
@@ -170,7 +171,7 @@ def event(event_id):
     """
     event = Event.query.filter_by(id=event_id).first_or_404()
     # Fetch users that can be notified (only with user role)
-    users_to_notify = User.query.filter_by(role_id=2).all()
+    users_to_notify = User.get_all_standard_users()
     today = datetime.date.today().strftime("%Y-%m-%d")
     if request.method == "POST":
         event.title = request.form.get('title')
@@ -304,6 +305,8 @@ def new_user():
             return redirect(url_for('admin_bp.users'))
         if form.errors:
             flash_errors(form)
+            # Render previous user input in form fields
+            return render_template('admin/new_user.html', title='New user', form_prev_input=form)
     return render_template('admin/new_user.html', title='New user')
 
 
@@ -343,6 +346,8 @@ def user(user_id):
             return redirect(url_for('admin_bp.users'))
         if form.errors:
             flash_errors(form)
+            # Render previous user input in form fields
+            return render_template('admin/user.html', form_prev_input=form)
     return render_template('admin/user.html', user=user)
 
 
@@ -417,6 +422,7 @@ def notify():
     """
     Func allows to start notification service and change the service configuration.
     """
+    # only for test
     # print(scheduler.get_jobs(jobstore='default'))
     mail_config_cache = cache.get_dict('mail_server', 'mail_port', 'mail_security', 'mail_username', 'mail_password')
     # Notification config data (for interval and interval unit).
@@ -515,7 +521,7 @@ def notify():
 @admin_required
 def logs():
     """
-    List logs.
+    List app's logs.
     """
     logs_per_page = 12
     page = request.args.get('page', 1, type=int)
@@ -561,7 +567,7 @@ def logs():
 @admin_required
 def logs_clear():
     """
-    Clear logs.
+    Clear app's logs.
     """
     if request.args.get('range') == 'all':
         db.session.query(Log).delete()
@@ -587,6 +593,9 @@ def logs_clear():
 @login_required
 @admin_required
 def search_engine():
+    """
+    View shows search engine's status and config in admin dashboard.
+    """
     search_service_status = False if not current_app.elasticsearch or not current_app.elasticsearch.ping() else True
     search_url = current_app.config.get('ELASTICSEARCH_URL')
     # Get elasticsearch node info
@@ -619,7 +628,7 @@ def search_engine():
 @admin_required
 def search():
     """
-    Search engine for admin blueprint
+    Search engine for admin blueprint.
     """
     if not current_app.elasticsearch or not current_app.elasticsearch.ping():
         flash(f'Sorry! No connection with search engine!', 'danger')

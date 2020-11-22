@@ -1,6 +1,6 @@
 from flask import flash
-
 from wtforms.validators import ValidationError
+from dns import resolver
 
 
 def flash_errors(form):
@@ -66,3 +66,33 @@ class DateOrTimeChecker:
                 if message is None:
                     message = field.gettext(f'The value must be earlier or the same as "{field_benchmark.label.text}"')
                 raise ValidationError(message)
+
+
+class MxRecordValidator:
+    """
+    Custom class validator.
+    Validates whether the e-mail domain or MX record exist.
+    """
+    def __init__(self, message=None):
+        self.message = message
+
+    def __call__(self, form, field):
+        message = self.message
+        email_address = field.data
+        records = False
+        # Pull domain name from email address
+        domain_name = email_address.split('@')[1]
+        try:
+            # get MX record for the domain
+            records = resolver.resolve(domain_name, 'MX')
+        except resolver.NXDOMAIN:
+            message = field.gettext(f'Please enter valid email address. The domain "{domain_name}" does not exist')
+        except resolver.NoAnswer:
+            message = field.gettext(f'Please enter valid email address. The domain "{domain_name}" has no e-mail service')
+        except resolver.NoResolverConfiguration:
+            message = field.gettext(f'Please check your network connection"')
+        if not records:
+            if message is None:
+                message = field.gettext(f'Please enter valid email address')
+            raise ValidationError(message)
+

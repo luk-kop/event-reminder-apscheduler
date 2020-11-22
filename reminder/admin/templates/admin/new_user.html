@@ -13,8 +13,8 @@
     <div class="form-row">
         <div class="col-md-5 mb-3">
             <label for="id-username">Username</label>
-            {% if form_content %}
-                <input type="text" class="form-control" placeholder="Enter username..." value="{{ form_content.username }}" id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$" title="Username should contain chars (min 3): a-z, A-Z, 0-9, . _ -" required>
+            {% if form_prev_input %}
+                <input type="text" class="form-control" placeholder="Enter username..." value="{{ form_prev_input.username.data }}" id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{3,40}$" title="Username should contain chars (min 3): a-z, A-Z, 0-9, . _ -" required>
             {% else %}
                  <input type="text" class="form-control" placeholder="Enter username..." id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{1,39}[a-zA-Z0-9]$" title="Username should contain chars (min 3): a-z, A-Z, 0-9, . _ -" required>
             {% endif %}
@@ -25,8 +25,8 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="id-email-prepend">@</span>
                 </div>
-                {% if form_content %}
-                    <input type="email" class="form-control" placeholder="Enter user's email address..." value="{{ form_content.email }}" id="id-email" name="email" pattern="^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$" min="4" max="70" required>
+                {% if form_prev_input %}
+                    <input type="email" class="form-control" placeholder="Enter user's email address..." value="{{ form_prev_input.email.data }}" id="id-email" name="email" pattern="^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$" min="4" max="70" required>
                 {% else %}
                     <input type="email" class="form-control" placeholder="Enter user's email address..." id="id-email" name="email" pattern="^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$" min="4" max="70" required>
                 {% endif %}
@@ -37,9 +37,9 @@
         <div class="col-md-3 mb-3">
             <label for="id-role">Role</label>
                 <select id="id-role" style="text-align-last: center" class="form-control" name="role">
-                {% if form_content and form_content.roleid %}
-                    <option value="admin" selected>Admin</option>
-                    <option value="user">User</option>
+                {% if form_prev_input %}
+                    <option value="admin" {{ 'selected' if form_prev_input.role.data == 'admin' }}>Admin</option>
+                    <option value="user" {{ 'selected' if form_prev_input.role.data == 'user' }}>User</option>
                 {% else %}
                     <option value="admin">Admin</option>
                     <option value="user" selected>User</option>
@@ -49,9 +49,9 @@
         <div class="col-md-3 mb-3">
             <label for="id-access">Can log in?</label>
             <select id="id-access" style="text-align-last: center" class="form-control" name="access">
-                {% if form_content and not form_content.access %}
-                    <option value="True">Yes</option>
-                    <option value="False" selected>No</option>
+                {% if form_prev_input %}
+                    <option value="True" {{ 'selected' if form_prev_input.access.data == 'True' }}>Yes</option>
+                    <option value="False" {{ 'selected' if form_prev_input.access.data == 'False' }}>No</option>
                 {% else %}
                     <option value="True">Yes</option>
                     <option value="False">No</option>
@@ -61,9 +61,9 @@
         <div class="col-md-3 mb-3">
             <label for="id-pass_reset">Change password on next login?</label>
             <select id="id-pass_reset" style="text-align-last: center" class="form-control" name="pass_reset">
-                {% if form_content and form_content.pass_reset %}
-                    <option value="True" selected>Yes</option>
-                    <option value="False">No</option>
+                {% if form_prev_input %}
+                    <option value="True" {{ 'selected' if form_prev_input.pass_reset.data == 'True' }}>Yes</option>
+                    <option value="False" {{ 'selected' if form_prev_input.pass_reset.data == 'False' }}>No</option>
                 {% else %}
                     <option value="True">Yes</option>
                     <option value="False" selected>No</option>

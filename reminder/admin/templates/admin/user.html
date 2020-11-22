@@ -11,7 +11,11 @@
     <div class="form-row">
         <div class="col-md-5 mb-3">
             <label for="id-username">Username</label>
-            <input type="text" class="form-control" value="{{ user.username }}" id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{1,39}[a-zA-Z0-9]$" title="Username should contain chars: a-z, A-Z, 0-9, . _ -" required>
+            {% if form_prev_input %}
+                <input type="text" class="form-control" value="{{ form_prev_input.username.data }}" id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{1,39}[a-zA-Z0-9]$" title="Username should contain chars: a-z, A-Z, 0-9, . _ -" required>
+            {% else %}
+                <input type="text" class="form-control" value="{{ user.username }}" id="id-username" name="username" min="3" max="40" pattern="^[a-zA-Z0-9][a-zA-Z0-9\._-]{1,39}[a-zA-Z0-9]$" title="Username should contain chars: a-z, A-Z, 0-9, . _ -" required>
+            {% endif %}
         </div>
         <div class="col-md-5 mb-3">
             <label for="id-email">Email</label>
@@ -19,7 +23,11 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="id-email-prepend">@</span>
                 </div>
-                <input type="email" class="form-control" value="{{ user.email }}" id="id-email" name="email" pattern="^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$" min="4" max="70" required>
+                {% if form_prev_input %}
+                    <input type="email" class="form-control" value="{{ form_prev_input.email.data }}" id="id-email" name="email" pattern="^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$" min="4" max="70" required>
+                {% else %}
+                    <input type="email" class="form-control" value="{{ user.email }}" id="id-email" name="email" pattern="^[a-z0-9]([a-z0-9_\.-]){3,30}@([a-z0-9_\.-]){1,30}\.([a-z\.]{2,8})$" min="4" max="70" required>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -27,36 +35,51 @@
         <div class="col-md-3 mb-3">
             <label for="id-role">Role</label>
                 <select id="id-role" style="text-align-last: center" class="form-control" name="role">
-                    {% if user.is_admin() %}
-                        <option value="admin" selected>Admin</option>
-                        <option value="user">User</option>
+                    {% if form_prev_input %}
+                        <option value="admin" {{ 'selected' if form_prev_input.role.data == 'admin' }}>Admin</option>
+                        <option value="user" {{ 'selected' if form_prev_input.role.data == 'user' }}>User</option>
                     {% else %}
-                        <option value="admin">Admin</option>
-                        <option value="user" selected>User</option>
+                        {% if user.is_admin() %}
+                            <option value="admin" selected>Admin</option>
+                            <option value="user">User</option>
+                        {% else %}
+                            <option value="admin">Admin</option>
+                            <option value="user" selected>User</option>
+                        {% endif %}
                     {% endif %}
                 </select>
         </div>
         <div class="col-md-3 mb-3">
             <label for="id-access">Can log in?</label>
             <select id="id-access" style="text-align-last: center" class="form-control" name="access">
-                {% if user.access_granted %}
-                    <option value="True" selected>Yes</option>
-                    <option value="False">No</option>
+                {% if form_prev_input %}
+                    <option value="True" {{ 'selected' if form_prev_input.access.data == 'True' }}>Yes</option>
+                    <option value="False" {{ 'selected' if form_prev_input.access.data == 'False' }}>No</option>
                 {% else %}
-                    <option value="True">Yes</option>
-                    <option value="False" selected>No</option>
+                    {% if user.access_granted %}
+                        <option value="True" selected>Yes</option>
+                        <option value="False">No</option>
+                    {% else %}
+                        <option value="True">Yes</option>
+                        <option value="False" selected>No</option>
+                    {% endif %}
                 {% endif %}
             </select>
         </div>
         <div class="col-md-3 mb-3">
             <label for="id-pass_reset">Change password on next login?</label>
             <select id="id-pass_reset" style="text-align-last: center" class="form-control" name="pass_reset">
-                {% if user.pass_change_req %}
-                    <option value="True" selected>Yes</option>
-                    <option value="False">No</option>
+                {% if form_prev_input %}
+                    <option value="True" {{ 'selected' if form_prev_input.pass_reset.data == 'True' }}>Yes</option>
+                    <option value="False" {{ 'selected' if form_prev_input.pass_reset.data == 'False' }}>No</option>
                 {% else %}
-                    <option value="True">Yes</option>
-                    <option value="False" selected>No</option>
+                    {% if user.pass_change_req %}
+                        <option value="True" selected>Yes</option>
+                        <option value="False">No</option>
+                    {% else %}
+                        <option value="True">Yes</option>
+                        <option value="False" selected>No</option>
+                    {% endif %}
                 {% endif %}
             </select>
         </div>
