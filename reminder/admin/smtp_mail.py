@@ -42,7 +42,7 @@ def email_content(recipients_list, event, smtp_obj, msg):
 
 def send_email(subject, recipients, event, mail_server, mail_port, mail_security, mail_sender, mail_pass):
     """
-    Function establish connection with SNMP server and send emails to selected recipients.
+    Function establish connection with SMTP server and send emails to selected recipients.
     """
     recipients_list = recipients
     # Create the container email message.

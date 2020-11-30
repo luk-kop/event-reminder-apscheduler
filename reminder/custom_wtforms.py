@@ -1,6 +1,7 @@
-from flask import flash
+from flask import flash, current_app
 from wtforms.validators import ValidationError
 from dns import resolver
+import dns.exception
 
 
 def flash_errors(form):
@@ -77,22 +78,24 @@ class MxRecordValidator:
         self.message = message
 
     def __call__(self, form, field):
-        message = self.message
-        email_address = field.data
-        records = False
-        # Pull domain name from email address
-        domain_name = email_address.split('@')[1]
-        try:
-            # get MX record for the domain
-            records = resolver.resolve(domain_name, 'MX')
-        except resolver.NXDOMAIN:
-            message = field.gettext(f'Please enter valid email address. The domain "{domain_name}" does not exist')
-        except resolver.NoAnswer:
-            message = field.gettext(f'Please enter valid email address. The domain "{domain_name}" has no e-mail service')
-        except resolver.NoResolverConfiguration:
-            message = field.gettext(f'Please check your network connection"')
-        if not records:
-            if message is None:
-                message = field.gettext(f'Please enter valid email address')
-            raise ValidationError(message)
+        # Check if email validation is in force
+        if current_app.config.get('CHECK_EMAIL_DOMAIN'):
+            message = self.message
+            email_address = field.data
+            records = False
+            # Pull domain name from email address
+            domain_name = email_address.split('@')[1]
+            try:
+                # get MX record for the domain
+                records = resolver.resolve(domain_name, 'MX')
+            except resolver.NXDOMAIN:
+                message = field.gettext(f'Please enter valid email address. The domain "{domain_name}" does not exist')
+            except resolver.NoAnswer:
+                message = field.gettext(f'Please enter valid email address. The domain "{domain_name}" has no e-mail service')
+            except (resolver.NoResolverConfiguration, dns.exception.Timeout):
+                message = field.gettext(f'Please check your network connection"')
+            if not records:
+                if message is None:
+                    message = field.gettext(f'Please enter valid email address')
+                raise ValidationError(message)
 

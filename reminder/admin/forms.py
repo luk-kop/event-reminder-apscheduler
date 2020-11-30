@@ -54,12 +54,11 @@ class NotifyForm(FlaskForm):
     notify_interval = IntegerField(label='Notification interval',
                                    validators=[InputRequired(), NumberRange(min=1)])
     mail_server = StringField(label='Mail server',
-                              validators=[InputRequired(),
-                                          Length(max=70)])
+                              validators=[InputRequired(), Length(max=70)])
     mail_port = IntegerField(label='Mail port',
                              validators=[InputRequired(), NumberRange(min=1)])
     mail_security = SelectField(label='Mail security',
                                 choices=[('tls', 'TLS'), ('ssl', 'SSL')])
     mail_username = StringField(label='Mail username',
-                                validators=[InputRequired(),
-                                            Length(max=70)])
+                                validators=[InputRequired(), Length(max=70)])
+    mail_password = PasswordField(label='Mail Password')

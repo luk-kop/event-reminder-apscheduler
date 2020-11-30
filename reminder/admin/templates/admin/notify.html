@@ -91,30 +91,5 @@
 <!-- Switch Button JS -->
 <!--<script src="{{ url_for('static', filename='js/bootstrap4-toggle.min.js') }}"></script>-->
 <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
-
-<script type='text/javascript'>
-function addAlert() {
-    var notify_service = document.getElementById("id-notify_service");
-    if (notify_service.checked) {
-        $('#alerts').append(
-            '<div class="alert alert-warning alert-dismissible fade show text-center" role="alert">' +
-                        'The mail service testing in progress...' +
-                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                            '<span aria-hidden="true">&times;</span>' +
-                        '</button>' +
-                    '</div>');
-    }
-}
-</script>
-
-<!--
-<div class="alert alert-warning alert-dismissible fade show text-center" role="alert">
-                    The mail service testing in progress...'
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-
--->
-
+<script src="{{ url_for('static', filename='js/notify.js') }}"></script>
 {% endblock scripts %}

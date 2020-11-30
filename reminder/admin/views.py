@@ -31,13 +31,12 @@ def before_app_req():
     Event.reindex()
     Log.reindex()
     # Caching mail server config - in order to allow the admin to change the configuration
-    # while the application is running
+    # while the application is running (store mail config data in db is not desired)
     cache.set_many({'mail_server': current_app.config.get('MAIL_SERVER'),
                     'mail_port': current_app.config.get('MAIL_PORT'),
                     'mail_security': current_app.config.get('MAIL_SECURITY'),
                     'mail_username': current_app.config.get('MAIL_DEFAULT_SENDER'),
-                    'mail_password': current_app.config.get('MAIL_PASSWORD')
-                    })
+                    'mail_password': current_app.config.get('MAIL_PASSWORD'),})
     # cache.clear()
 
 
@@ -424,19 +423,18 @@ def notify():
     """
     # only for test
     # print(scheduler.get_jobs(jobstore='default'))
-    mail_config_cache = cache.get_dict('mail_server', 'mail_port', 'mail_security', 'mail_username', 'mail_password')
+    # Get mail config from cache
+    mail_config_cache = cache.get_dict('mail_server',
+                                       'mail_port',
+                                       'mail_security',
+                                       'mail_username',
+                                       'mail_password')
     # Notification config data (for interval and interval unit).
     notification_config = Notification.query.first()
     # Mail config data.
-    notify_config = {
-        'mail_server': mail_config_cache.get('mail_server'),
-        'mail_port': mail_config_cache.get('mail_port'),
-        'mail_security': mail_config_cache.get('mail_security'),
-        'mail_username': mail_config_cache.get('mail_username'),
-        'mail_password': mail_config_cache.get('mail_password'),
-        'notify_unit': notification_config.notify_unit,
-        'notify_interval': notification_config.notify_interval,
-    }
+    notify_config = mail_config_cache.copy()
+    notify_config['notify_unit'] = notification_config.notify_unit
+    notify_config['notify_interval'] = notification_config.notify_interval
     if request.method == "POST":
         form = NotifyForm()
         # Validate form data on server-side
@@ -444,28 +442,29 @@ def notify():
             # Fetch data from form.
             notify_status_form = request.form.get('notify_status')
             notify_unit_form = request.form.get('notify_unit')
-            notify_interval_form = request.form.get('notify_interval')
-            mail_server_form = request.form.get('mail_server')
-            mail_port_form = request.form.get('mail_port')
-            mail_security_form = request.form.get('mail_security')
-            mail_username_form = request.form.get('mail_username')
-            mail_password_form = request.form.get('mail_password')
-            # Update the data in 'notify_config' div and config object (if required).
-            if mail_server_form != notify_config['mail_server']:
-                cache.set('mail_server', mail_server_form)
-                notify_config['mail_server'] = mail_server_form
-            if mail_port_form != notify_config['mail_port']:
-                cache.set('mail_port', mail_port_form)
-                notify_config['mail_port'] = mail_port_form
-            if mail_security_form != notify_config['mail_security']:
-                cache.set('mail_security', mail_security_form)
-                notify_config['mail_security'] = mail_security_form
-            if mail_username_form != notify_config['mail_username']:
-                cache.set('mail_username', mail_username_form)
-                notify_config['mail_username'] = mail_username_form
-            if mail_password_form:
-                cache.set('mail_password', mail_password_form)
-                notify_config['mail_password'] = mail_password_form
+            notify_interval_form = int(request.form.get('notify_interval'))
+            # Checks whether the data provided in the form differs from those stored in the cache
+            # and update the data in 'notify_config' div and config object (if required).
+            config_changed = False
+            for key, val in notify_config.items():
+                if key in form.data.keys() and key in mail_config_cache.keys():
+                    if notify_config[key] != str(form.data[key]) and str(form.data[key]) != '':
+                        cache.set(key, str(form.data[key]))
+                        notify_config[key] = str(form.data[key])
+                        config_changed = True
+                        print(key, form.data[key])
+            # Checks whether the data provided in the form differs from those stored in the db
+            if notify_unit_form != notify_config['notify_unit'] or \
+                    notify_interval_form != notify_config['notify_interval']:
+                notification_config.notify_unit = notify_unit_form
+                notification_config.notify_interval = notify_interval_form
+                db.session.commit()
+                # Update the rest of the data in 'notify_config' dic.
+                notify_config['notify_unit'] = notify_unit_form
+                notify_config['notify_interval'] = notify_interval_form
+                config_changed = True
+                print(notify_config)
+            print(config_changed)
             # Test mail configuration before running service
             if notify_status_form == 'on':
                 test_mail_config = smtp_mail.test_email(notify_config['mail_server'],
@@ -475,7 +474,7 @@ def notify():
                                                         notify_config['mail_password'])
             else:
                 test_mail_config = False
-            # Test mail configuration before running service.
+            # Notification service engine
             if not notify_status_form and scheduler.get_jobs():
                 scheduler.remove_job('my_job_id')
                 current_app.logger_admin.info(f'Notification service has been turned off by "{current_user.username}"')
@@ -490,25 +489,19 @@ def notify():
                                                   f'"{current_user.username}"')
                 if notify_unit_form == 'seconds':
                     scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
-                                      seconds=int(notify_interval_form), id='my_job_id')
+                                      seconds=notify_interval_form, id='my_job_id')
                 elif notify_unit_form == 'minutes':
                     scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
-                                      minutes=int(notify_interval_form), id='my_job_id')
+                                      minutes=notify_interval_form, id='my_job_id')
                 else:
                     scheduler.add_job(func=background_job, trigger='interval', replace_existing=True, max_instances=1,
-                                      hours=int(notify_interval_form), id='my_job_id')
+                                      hours=notify_interval_form, id='my_job_id')
                 flash('Connection with mail server established correctly! The notify service is running!', 'success')
-            # Save notification settings to db.
-            if notify_unit_form != notify_config['notify_unit'] or notify_interval_form != notify_config['notify_interval']:
-                notification_config.notify_unit = notify_unit_form
-                notification_config.notify_interval = int(notify_interval_form)
-                db.session.commit()
-                if not scheduler.get_jobs():
-                    current_app.logger_admin.info(f'Notification service config has been changed by '
-                                                  f'"{current_user.username}"')
-            # Update the rest of the data in 'notify_config' dic.
-            notify_config['notify_unit'] = notify_unit_form
-            notify_config['notify_interval'] = notify_interval_form
+            # Flash msg when config has been changed by user
+            if not scheduler.get_jobs() and config_changed:
+                current_app.logger_admin.info(f'Notification service config has been changed by '
+                                              f'"{current_user.username}"')
+                flash('The notification service config has been changed!', 'success')
         if form.errors:
             flash_errors(form)
     # Determine weather some scheduler jobs exist - if True, notification service is running
