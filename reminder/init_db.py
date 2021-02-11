@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash
 import random
 import os
+import argparse
 
 
 def random_user_id():
@@ -105,19 +106,18 @@ class Log(Base):
 
 
 if __name__ == '__main__':
-    # db_name = input('\nEnter name for DB [app.db]: ')
-    # if not db_name:
-    #     db_name = 'app.db'
+    parser = argparse.ArgumentParser(description='Script adds dummy data to the database')
+    parser.add_argument('-u', '--adminuser', default='admin', help='Username for admin account (default: admin)')
+    parser.add_argument('-p', '--adminpass', default='admin', help='Password for admin account (default: admin)')
+    parser.add_argument('-d', '--dbname', default='app.db', help='Change SQLite\'s db name (default: app.db)')
+    args = parser.parse_args()
 
-    # if os.path.exists(db_name):
-    #     query = input(f'\nDB "{db_name} "already exist. Shall I remove it [yes]? ')
-    #     if query.strip().lower() in ['', 'yes']:
-    #         print(f'\nRemoving an existing DB - "{db_name}"...')
-    #         os.remove(db_name)
-    #     else:
-    #         print('\nExiting script!')
-    #         quit()
-    db_name = 'app.db'
+    db_name = args.dbname
+    admin_username = args.adminuser
+    admin_passwd = args.adminpass
+    # default pass for dummy users
+    user_passwd = 'password'
+
     if os.path.exists(db_name):
         print(f'event-reminder: Removing an existing DB - "{db_name}"...')
         os.remove(db_name)
@@ -142,16 +142,6 @@ if __name__ == '__main__':
     ]
 
     session.bulk_save_objects(notification_config)
-
-    # print("\nEnter credentials for user with admin privileges:")
-    # admin_username = input('> username: ')
-    # admin_passwd = input('> password: ')
-    admin_username = 'admin'
-    admin_passwd = 'admin'
-
-    # print("\nEnter default password for all dummy users:")
-    # user_passwd = input('> password: ')
-    user_passwd = 'password'
 
     print('event-reminder: Adding dummy users data to db...')
     users = [

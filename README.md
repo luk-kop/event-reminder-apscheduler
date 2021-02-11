@@ -25,9 +25,10 @@ Python third party packages:
 * [elasticsearch](https://pypi.org/project/elasticsearch/)
 * [python-dotenv](https://pypi.org/project/python-dotenv/)
 
-### Installation
+***
+## Installation with venv
 
-The application can be build locally with `virtualenv` tool. Run following commands in order to create virtual environment and install the required packages.
+The application can be build and run locally with `virtualenv` tool. Run following commands in order to create virtual environment and install the required packages.
 
 ```bash
 $ virtualenv venv
@@ -67,14 +68,17 @@ Then start a single node cluster with Docker:
 $ docker run --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.7.0
 ```
 
-***
-
-## Running the App
+### Running the App
 
 Before running the **Event Reminder** app you can use script `init_db.py` to initialize database and add some dummy data that can be used later in the processing.
 ```bash
 (venv) $ cd reminder
+# Below script will create default admin username 'admin' with password 'admin'
 (venv) $ python init_db.py
+# You can create a different user instead of the default one using proper options. Below example for username 'bob' with password 'LikePancakes123#'.
+(venv) $ python init_db.py -u bob -p LikePancakes123#
+# For more info please use:
+(venv) $ python init_db.py --help
 ```
 
 After adding dummy data, you can start the application. First of all set the `FLASK_APP` environment variable to point `run.py` script and then invoke `flask run` command.
@@ -86,11 +90,11 @@ After adding dummy data, you can start the application. First of all set the `FL
 ```
 
 ***
+## Installation with Docker-Compose
+The application can be also build and run locally with Docker-Compose tool. Docker-Compose allows you to create working out-of-the-box example of **Event Reminder** application with Gunicorn, Elasticsearch and SQLite with some dummy data on board.
 
-## Running the App with Docker-Compose
-
-Docker-Compose allows you to create working out-of-the-box example of **Event Reminder** application with Gunicorn, Elasticsearch and SQLite with some dummy data on board.
-To build and run app with Docker-Compose - clone the repo and follow below quick-start instructions. 
+### Running the App
+To build and run app with Docker-Compose - clone the repo and follow the quick-start instructions below. 
 
 In order to correctly start the application, you must run the following commands in the project root directory (`event-reminder`).
 
@@ -111,7 +115,7 @@ $ docker-compose ps
 3. Open `http://localhost:8080` in your browser to see the application running. Login with default credentials:
    - admin user: `admin`
    - default pass: `admin`
-
+   
 
 4. To stop application run:
 ```bash
