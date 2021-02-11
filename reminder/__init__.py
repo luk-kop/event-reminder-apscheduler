@@ -28,10 +28,13 @@ def create_app():
     Construct the core app object.
     """
     app = Flask(__name__)
-    # Application Config for development
-    app.config.from_object(DevConfig)
-    # Application Config for production
-    # app.config.from_object(ProdConfig)
+    # Distinguish whether production or development database should be used
+    if os.environ.get('APPLICATION_MODE') == 'production':
+        # Application Config for production
+        app.config.from_object(ProdConfig)
+    else:
+        # Application Config for development
+        app.config.from_object(DevConfig)
 
     with app.app_context():
         # Initialize Plugins
