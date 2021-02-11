@@ -38,7 +38,7 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     # Check (validate) user's email address domain
-    CHECK_EMAIL_DOMAIN = True if os.environ.get('CHECK_EMAIL_DOMAIN').lower() == 'True' else False
+    CHECK_EMAIL_DOMAIN = True if os.environ.get('CHECK_EMAIL_DOMAIN') == 'True' else False
     # Apscheduler Config
     SCHEDULER_JOBSTORES = {
         'default': SQLAlchemyJobStore(url=os.environ.get('DATABASE_URL_SCHEDULAR'))

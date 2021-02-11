@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile.gunicorn
+    command: gunicorn -w 2 --bind 0.0.0.0:8080 run:app
+    ports:
+      - "8080:8080"
+    restart: always
+    env_file:
+      - ./.env-docker
+    depends_on:
+      - elastic
+
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+    environment:
+      - discovery.type=single-node

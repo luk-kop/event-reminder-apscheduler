@@ -49,7 +49,8 @@ MAIL_SERVER=smtp.example.com
 MAIL_PORT=587
 MAIL_USERNAME=xxx.yyy@example.com               # account which will be used for SMTP email service
 MAIL_PASSWORD=xxxxxxx                           # password for above account
-ELASTICSEARCH_URL=http://localhost:9200         # optional 
+ELASTICSEARCH_URL=http://localhost:9200         # optional
+CHECK_EMAIL_DOMAIN='False' 
 ```
 The `.env` file will be imported by application on startup.
 
@@ -70,7 +71,7 @@ $ docker run --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=s
 
 ## Running the App
 
-Before running the Event Reminder app you can use script `init_db.py` to initialize database and add some dummy data that can be used later in the processing.
+Before running the **Event Reminder** app you can use script `init_db.py` to initialize database and add some dummy data that can be used later in the processing.
 ```bash
 (venv) $ cd reminder
 (venv) $ python init_db.py
@@ -82,4 +83,37 @@ After adding dummy data, you can start the application. First of all set the `FL
 # in MS Windows OS run 'set FLASK_APP=run.py'
 (venv) $ cd ..
 (venv) $ flask run
+```
+
+***
+
+## Running the App with Docker-Compose
+
+Docker-Compose allows you to create working out-of-the-box example of **Event Reminder** application with Gunicorn, Elasticsearch and SQLite with some dummy data on board.
+To build and run app with Docker-Compose - clone the repo and follow below quick-start instructions. 
+
+In order to correctly start the application, you must run the following commands in the project root directory (`event-reminder`).
+
+1. Before running `docker-compose` command you should create `.env-docker` file (ENVs for Flask app). The best solution is to copy the existing example file and edit the necessary data.
+```bash
+# Create .env-docker file using example from repository
+$ cp .env-docker-example .env-docker
+```
+2. Build and start containers using the commands shown below:
+```bash
+# To build containers specified in docker-compose.yml file
+$ docker-compose build
+# To start containers (add -d to run them in the background)
+$ docker-compose up -d
+# To verify status of the application:
+$ docker-compose ps
+```
+3. Open `http://localhost:8080` in your browser to see the application running. Login with default credentials:
+   - admin user: `admin`
+   - default pass: `admin`
+
+
+4. To stop application run:
+```bash
+$ docker-compose stop
 ```

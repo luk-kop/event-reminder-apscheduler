@@ -1,0 +1,14 @@
+# Ignore everything
+*
+
+# Allow files and dirs
+!/reminder/**
+!requirements.txt
+!run.py
+!config.py
+
+# Ignore specific files inside allowed dirs
+**/*.db
+**/*.env*
+**/*.log
+**/*.md

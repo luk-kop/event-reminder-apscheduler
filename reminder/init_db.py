@@ -105,18 +105,22 @@ class Log(Base):
 
 
 if __name__ == '__main__':
-    db_name = input('\nEnter name for DB [app.db]: ')
-    if not db_name:
-        db_name = 'app.db'
+    # db_name = input('\nEnter name for DB [app.db]: ')
+    # if not db_name:
+    #     db_name = 'app.db'
 
+    # if os.path.exists(db_name):
+    #     query = input(f'\nDB "{db_name} "already exist. Shall I remove it [yes]? ')
+    #     if query.strip().lower() in ['', 'yes']:
+    #         print(f'\nRemoving an existing DB - "{db_name}"...')
+    #         os.remove(db_name)
+    #     else:
+    #         print('\nExiting script!')
+    #         quit()
+    db_name = 'app.db'
     if os.path.exists(db_name):
-        query = input(f'\nDB "{db_name} "already exist. Shall I remove it [yes]? ')
-        if query.strip().lower() in ['', 'yes']:
-            print(f'\nRemoving an existing DB - "{db_name}"...')
-            os.remove(db_name)
-        else:
-            print('\nExiting script!')
-            quit()
+        print(f'event-reminder: Removing an existing DB - "{db_name}"...')
+        os.remove(db_name)
 
     engine = create_engine(f'sqlite:///{db_name}')
     # generate database schema
@@ -139,14 +143,17 @@ if __name__ == '__main__':
 
     session.bulk_save_objects(notification_config)
 
-    print("\nEnter credentials for user with admin privileges:")
-    admin_username = input('> username: ')
-    admin_passwd = input('> password: ')
+    # print("\nEnter credentials for user with admin privileges:")
+    # admin_username = input('> username: ')
+    # admin_passwd = input('> password: ')
+    admin_username = 'admin'
+    admin_passwd = 'admin'
 
-    print("\nEnter default password for all dummy users:")
-    user_passwd = input('> password: ')
+    # print("\nEnter default password for all dummy users:")
+    # user_passwd = input('> password: ')
+    user_passwd = 'password'
 
-    print('\nAdding dummy users data to db...')
+    print('event-reminder: Adding dummy users data to db...')
     users = [
         User(username=f'{admin_username}',
              email=f'{admin_username}@niepodam.pl',
@@ -211,7 +218,7 @@ if __name__ == '__main__':
     today_with_minutes = datetime.utcnow().replace(second=0, microsecond=0)
 
     # Add some dummy data (events)
-    print('\nAdding dummy data events to db...')
+    print('event-reminder: Adding dummy data events to db...')
 
     events = [
         Event(title='Visit to the dentist',
@@ -640,4 +647,4 @@ if __name__ == '__main__':
 
     session.commit()
 
-    print(f'\nNew SQLite db - {db_name} has been created!!!\n')
+    print(f'event-reminder: New SQLite db - {db_name} has been created!!!')

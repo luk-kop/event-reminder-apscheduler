@@ -452,7 +452,7 @@ def notify():
                         cache.set(key, str(form.data[key]))
                         notify_config[key] = str(form.data[key])
                         config_changed = True
-                        print(key, form.data[key])
+                        # print(key, form.data[key])
             # Checks whether the data provided in the form differs from those stored in the db
             if notify_unit_form != notify_config['notify_unit'] or \
                     notify_interval_form != notify_config['notify_interval']:
@@ -463,8 +463,6 @@ def notify():
                 notify_config['notify_unit'] = notify_unit_form
                 notify_config['notify_interval'] = notify_interval_form
                 config_changed = True
-                print(notify_config)
-            print(config_changed)
             # Test mail configuration before running service
             if notify_status_form == 'on':
                 test_mail_config = smtp_mail.test_email(notify_config['mail_server'],
