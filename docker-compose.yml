@@ -3,17 +3,28 @@ services:
   web:
     build: 
       context: .
-      dockerfile: Dockerfile.gunicorn
-    command: gunicorn -w 2 --bind 0.0.0.0:8080 run:app
+      dockerfile: ./docker/web/Dockerfile.gunicorn
+    # -preload flag tells Gunicorn to "load the app before forking the worker processes" - for APScheduler
+    command: gunicorn -w 2 --bind 0.0.0.0:8080 run:app --preload
     ports:
       - "8080:8080"
     restart: always
     env_file:
-      - ./.env-docker
+      - ./docker/web/.env-web
     depends_on:
       - elastic
+      - db
 
   elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+    restart: always
     environment:
       - discovery.type=single-node
+
+  db:
+    build:
+      context: ./docker/db/
+      dockerfile: Dockerfile.postgres
+    restart: always
+    env_file:
+      - ./docker/db/.env-db

@@ -287,7 +287,7 @@ def new_user():
             # Check if username and email already exist in db.
             user_exist = check_user_exist(request)
             if user_exist:
-                return render_template('admin/new_user.html', title='New user', form_content=user_exist)
+                return render_template('admin/new_user.html', title='New user', form_prev_input=form)
             username_form = request.form.get('username')
             email_form = request.form.get('email')
             password_form = request.form.get('password')
@@ -325,7 +325,7 @@ def user(user_id):
             # Check if new assigned username or email exist in db.
             user_exist = check_user_exist(request, user)
             if user_exist:
-                return render_template('admin/user.html', user=user)
+                return render_template('admin/user.html', form_prev_input=form)
             username_form = request.form.get('username')
             email_form = request.form.get('email')
             password_form = request.form.get('password')

@@ -47,7 +47,7 @@ class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('PROD_DATABASE_URL')
     # Apscheduler Config
     SCHEDULER_JOBSTORES = {
-        'default': SQLAlchemyJobStore(url=os.environ.get('PROD_DATABASE_URL_SCHEDULER'))
+        'default': SQLAlchemyJobStore(url=os.environ.get('PROD_DATABASE_URL'))
     }
 
 
@@ -59,7 +59,7 @@ class DevConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
     # Apscheduler Config
     SCHEDULER_JOBSTORES = {
-        'default': SQLAlchemyJobStore(url=os.environ.get('DEV_DATABASE_URL_SCHEDULER'))
+        'default': SQLAlchemyJobStore(url=os.environ.get('DEV_DATABASE_URL'))
     }
 
 
@@ -72,3 +72,7 @@ class TestConfig(Config):
     DEBUG = True
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
+    # Apscheduler Config
+    SCHEDULER_JOBSTORES = {
+        'default': SQLAlchemyJobStore(url=os.environ.get('DEV_DATABASE_URL'))
+    }

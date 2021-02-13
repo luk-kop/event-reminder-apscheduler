@@ -18,12 +18,13 @@ Python third party packages:
 * [Flask](https://flask.palletsprojects.com/en/1.1.x/)
 * [Flask-SQLalchemy](https://flask-sqlalchemy.palletsprojects.com/en/2.x/)
 * [Flask-WTF](https://flask-wtf.readthedocs.io/en/stable/)
-* [Flask-APSchedular](https://github.com/viniciuschiele/flask-apscheduler)
+* [Flask-APScheduler](https://github.com/viniciuschiele/flask-apscheduler)
 * [Flask-Login](https://flask-login.readthedocs.io/en/latest/)
 * [Flask-Caching](https://flask-caching.readthedocs.io/en/latest/)
 * [Requests](https://requests.readthedocs.io/en/master/)
 * [elasticsearch](https://pypi.org/project/elasticsearch/)
 * [python-dotenv](https://pypi.org/project/python-dotenv/)
+* [psycopg2-binary](https://pypi.org/project/psycopg2-binary/)
 
 ***
 ## Installation with venv
@@ -47,9 +48,7 @@ SECRET_KEY=use-some-random-key
 APPLICATION_MODE='development'                     # for development will use SQLite db
 # APPLICATION_MODE='production'                    # for production will use PostgreSQL db
 DEV_DATABASE_URL=sqlite:///app.db                  # example for SQLite
-PROD_DATABASE_URL=sqlite:///app.db                 # example for PostgreSQL          <--- change it
-DEV_DATABASE_URL_SCHEDULER=sqlite:///schedular.db   # example for SQLite
-PROD_DATABASE_URL_SCHEDULER=sqlite:///schedular.db  # example for PostgreSQL        <--- change it
+PROD_DATABASE_URL=postgresql://reminderuser:password@db:5432/reminderdb     # example for PostgreSQL
 MAIL_SERVER=smtp.example.com
 MAIL_PORT=587
 MAIL_USERNAME=xxx.yyy@example.com               # account which will be used for SMTP email service
@@ -95,17 +94,18 @@ After adding dummy data, you can start the application. First of all set the `FL
 
 ***
 ## Installation with Docker-Compose
-The application can be also build and run locally with Docker-Compose tool. Docker-Compose allows you to create working out-of-the-box example of **Event Reminder** application with Gunicorn, Elasticsearch and SQLite with some dummy data on board.
+The application can be also build and run locally with Docker-Compose tool. Docker-Compose allows you to create working out-of-the-box example of **Event Reminder** application with Gunicorn, Elasticsearch and PostgreSQL with some dummy data on board.
 
 ### Running the App
 To build and run app with Docker-Compose - clone the repo and follow the quick-start instructions below. 
 
 In order to correctly start the application, you must run the following commands in the project root directory (`event-reminder`).
 
-1. Before running `docker-compose` command you should create `.env-docker` file (ENVs for Flask app). The best solution is to copy the existing example file and edit the necessary data.
+1. Before running `docker-compose` command you should create `.env-web` and `.env-db` files (ENVs for Flask app and PostgreSQL). The best solution is to copy the existing example files and edit the necessary data.
 ```bash
 # Create .env-docker file using example from repository
-$ cp .env-docker-example .env-docker
+$ cp docker/web/.env-web-example docker/web/.env-web
+$ cp docker/db/.env-db-example docker/db/.env-db
 ```
 2. Build and start containers using the commands shown below:
 ```bash

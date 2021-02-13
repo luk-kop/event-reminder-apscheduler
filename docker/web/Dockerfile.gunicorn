@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 # This keeps Python from buffering stdin/stdout
 ENV PYTHONUNBUFFERED 1
 
-# copy project's files as web user
+# Copy project's files as web user
 COPY --chown=web:web . .
 
 # install dependencies and gunicorn
@@ -20,6 +20,7 @@ USER web
 
 EXPOSE 8080
 
-RUN cd reminder/ \
-	&& python init_db.py \ 
-	&& cd ..
+# Create db and add some dummy data (only in SQLite version)
+# RUN cd reminder/ \
+#	&& python init_db.py \
+#	&& cd ..
