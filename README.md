@@ -39,7 +39,7 @@ $ source venv/bin/activate
 
 ### Environment variables
 
-Event Reminder application depends on some specific environment variables. 
+The **Event Reminder** application depends on some specific environment variables. 
 To run application successfully the environment variables should be stored in `.env` file in the root application directory (`event-reminder` dir).
 
 ```
@@ -59,7 +59,7 @@ CHECK_EMAIL_DOMAIN='False'                      # if 'True' validate whether ema
 The `.env` file will be imported by application on startup.
 
 ### Elasticsearch server
-Elasticsearch is not required to run the Event Reminder application. Without the specified 'ELASTICSEARCH_URL' variable and/or running the Elasticsearch node, the application will run, but no search function will be available.
+Elasticsearch is not required to run the **Event Reminder** application. Without the specified `ELASTICSEARCH_URL` variable and/or running the Elasticsearch node, the application will run, but no search function will be available.
 
 The fastest and easiest way to start Elasticsearch node is to run it in Docker container.
 You can obtain Elasticsearch for Docker issuing below command (examples for 7.7.0 version):
@@ -103,7 +103,7 @@ In order to correctly start the application, you must run the following commands
 
 1. Before running `docker-compose` command you should create `.env-web` and `.env-db` files (ENVs for Flask app and PostgreSQL). The best solution is to copy the existing example files and edit the necessary data.
 ```bash
-# Create .env-docker file using example from repository
+# Create .env-web and .env-db files using examples from repository
 $ cp docker/web/.env-web-example docker/web/.env-web
 $ cp docker/db/.env-db-example docker/db/.env-db
 ```

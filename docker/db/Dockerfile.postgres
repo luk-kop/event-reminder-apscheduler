@@ -2,4 +2,4 @@ FROM postgres:13
 
 USER postgres:postgres
 
-COPY ./0-init-user-db.sh ./1-create-tables.sh /docker-entrypoint-initdb.d/
+COPY ./0-init-user-db.sh ./1-create-tables.sh ./1-dummy-data.sh /docker-entrypoint-initdb.d/
