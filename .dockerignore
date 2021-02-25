@@ -6,6 +6,7 @@
 !requirements.txt
 !run.py
 !config.py
+!/docker/web/wait-for-elastic.sh
 
 # Ignore specific files inside allowed dirs
 **/*.db

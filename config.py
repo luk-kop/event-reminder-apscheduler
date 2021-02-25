@@ -7,6 +7,13 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
 basedir = Path(__file__).resolve().parent
 load_dotenv(os.path.join(basedir, '.env'))
+# Set base dir for SQLite db
+if os.environ.get('APPLICATION_MODE') == 'development':
+    db_url = os.environ.get('DEV_DATABASE_URL')
+else:
+    db_url = os.environ.get('PROD_DATABASE_URL')
+if db_url.startswith('sqlite:///'):
+    db_url = f'sqlite:///{basedir}/{db_url.split("///")[1]}'
 
 
 class Config:
@@ -44,10 +51,10 @@ class ProdConfig(Config):
     """
     Set Flask configuration vars for production.
     """
-    SQLALCHEMY_DATABASE_URI = os.environ.get('PROD_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = db_url
     # Apscheduler Config
     SCHEDULER_JOBSTORES = {
-        'default': SQLAlchemyJobStore(url=os.environ.get('PROD_DATABASE_URL'))
+        'default': SQLAlchemyJobStore(url=db_url)
     }
 
 
@@ -56,10 +63,11 @@ class DevConfig(Config):
     Set Flask configuration vars for development.
     """
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
+    # SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = db_url
     # Apscheduler Config
     SCHEDULER_JOBSTORES = {
-        'default': SQLAlchemyJobStore(url=os.environ.get('DEV_DATABASE_URL'))
+        'default': SQLAlchemyJobStore(url=db_url)
     }
 
 
@@ -71,8 +79,8 @@ class TestConfig(Config):
     LOGIN_DISABLED = True
     DEBUG = True
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = db_url
     # Apscheduler Config
     SCHEDULER_JOBSTORES = {
-        'default': SQLAlchemyJobStore(url=os.environ.get('DEV_DATABASE_URL'))
+        'default': SQLAlchemyJobStore(url=db_url)
     }

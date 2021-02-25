@@ -1,5 +1,8 @@
 # Event Reminder
 
+[![Python 3.7.7](https://img.shields.io/badge/python-3.8.5-blue.svg)](https://www.python.org/downloads/release/python-377/)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+
 The **Event Reminder** is a simple web application based on **[Flask](https://flask.palletsprojects.com/en/1.1.x/)** framework, **[Bootstrap](https://getbootstrap.com/)** user interface framework and **[FullCalendar](https://fullcalendar.io/)** full-sized JavaScript calendar. 
  
 The main purpose of the **Event Reminder** application is to send notifications about upcoming events to selected users. The application allows a standard user to enter event data, process it and display with the **FullCalendar** API. Moreover, the application has a built-in admin panel for the management of users, events, notification service, display app related logs and basic system info on app dashboard partly based on **[Chart.js](https://www.chartjs.org/)**. Sending reminders through the notification service is performed by the SMTP e-mail server provided by the admin user and by the APScheduler library.
@@ -68,14 +71,13 @@ $ docker pull docker.elastic.co/elasticsearch/elasticsearch:7.7.0
 ``` 
 Then start a single node cluster with Docker:
 ```bash
-$ docker run --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+$ docker run --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -d docker.elastic.co/elasticsearch/elasticsearch:7.7.0
 ```
 
 ### Running the App
 
 Before running the **Event Reminder** app you can use script `init_db.py` to initialize database and add some dummy data that can be used later in the processing.
 ```bash
-(venv) $ cd reminder
 # Below script will create default admin username 'admin' with password 'admin'
 (venv) $ python init_db.py
 # You can create a different user instead of the default one using proper options. Below example for username 'bob' with password 'LikePancakes123#'.
@@ -86,9 +88,9 @@ Before running the **Event Reminder** app you can use script `init_db.py` to ini
 
 After adding dummy data, you can start the application. First of all set the `FLASK_APP` environment variable to point `run.py` script and then invoke `flask run` command.
 ```bash
+(venv) $ cd reminder/
 (venv) $ export FLASK_APP=run.py
 # in MS Windows OS run 'set FLASK_APP=run.py'
-(venv) $ cd ..
 (venv) $ flask run
 ```
 

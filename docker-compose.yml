@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./docker/web/Dockerfile.gunicorn
     # -preload flag tells Gunicorn to "load the app before forking the worker processes" - for APScheduler
-    command: gunicorn -w 2 --bind 0.0.0.0:8080 run:app --preload
+    command: bash -c "./docker/web/wait-for-elastic.sh elastic && gunicorn -w 2 --bind 0.0.0.0:8080 run:app --preload"
     ports:
       - "8080:8080"
     restart: always

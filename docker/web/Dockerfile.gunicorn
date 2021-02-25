@@ -14,13 +14,12 @@ COPY --chown=web:web . .
 # install dependencies and gunicorn
 RUN pip install --upgrade pip \
 	&& pip install -r requirements.txt \
-	&& pip install gunicorn
+	&& pip install gunicorn \
+	&& apt-get update && apt-get install -y curl && apt-get clean
 
 USER web
 
 EXPOSE 8080
 
 # Create db and add some dummy data (only in SQLite version)
-# RUN cd reminder/ \
-#	&& python init_db.py \
-#	&& cd ..
+# RUN python init_db.py
