@@ -40,7 +40,6 @@ Project is created with the following Python third party packages:
 * [python-dotenv](https://pypi.org/project/python-dotenv/)
 * [psycopg2-binary](https://pypi.org/project/psycopg2-binary/)
 
-***
 ## Installation with venv
 
 The application can be build and run locally with `virtualenv` tool. Run following commands in order to create virtual environment and install the required packages.
@@ -106,7 +105,6 @@ After adding dummy data, you can start the application. First of all set the `FL
 (venv) $ flask run
 ```
 
-***
 ## Installation with Docker-Compose
 The application can be also build and run locally with Docker-Compose tool. Docker-Compose allows you to create working out-of-the-box example of **Event Reminder** application with Gunicorn, Elasticsearch and PostgreSQL with some dummy data on board.
 
