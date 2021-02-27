@@ -1,12 +1,25 @@
 # Event Reminder
-
+***
 [![Python 3.7.7](https://img.shields.io/badge/python-3.8.5-blue.svg)](https://www.python.org/downloads/release/python-377/)
+[![Flask 1.1.1](https://img.shields.io/badge/Flask-1.1.1-blue.svg)](https://flask.palletsprojects.com/en/1.1.x/)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
-The **Event Reminder** is a simple web application based on **[Flask](https://flask.palletsprojects.com/en/1.1.x/)** framework, **[Bootstrap](https://getbootstrap.com/)** user interface framework and **[FullCalendar](https://fullcalendar.io/)** full-sized JavaScript calendar. 
+The **Event Reminder** is a simple web application based on **[Flask](https://flask.palletsprojects.com/en/1.1.x/)** framework, **[Bootstrap](https://getbootstrap.com/)** UI framework and **[FullCalendar](https://fullcalendar.io/)** full-sized JavaScript calendar. 
  
 The main purpose of the **Event Reminder** application is to send notifications about upcoming events to selected users. The application allows a standard user to enter event data, process it and display with the **FullCalendar** API. Moreover, the application has a built-in admin panel for the management of users, events, notification service, display app related logs and basic system info on app dashboard partly based on **[Chart.js](https://www.chartjs.org/)**. Sending reminders through the notification service is performed by the SMTP e-mail server provided by the admin user and by the APScheduler library.
 The application has implemented integration with the **Elasticsearch** search engine.
+***
+## Branch details
+The **Event Reminder** application has been designed in two versions with two different mechanisms to handle background (asynchronous) processes:
+- **APScheduler** (`master` branch)
+- **Celery** (`celery-version` branch)
+
+This branch is dedicated for **APScheduler**. In order to change to `celery version` branch use the following commands:
+```bash
+# After clonning repository
+cd event-reminder/
+git checkout celery-version
+```
 ***
 
 ## Getting Started
@@ -15,9 +28,8 @@ Below instructions will get you a copy of the project up and running on your loc
 
 
 ### Requirements
-Minimum version of python required to run the **Event Reminder** application - **Python 3.7.7**
 
-Python third party packages:
+Project is created with the following Python third party packages:
 * [Flask](https://flask.palletsprojects.com/en/1.1.x/)
 * [Flask-SQLalchemy](https://flask-sqlalchemy.palletsprojects.com/en/2.x/)
 * [Flask-WTF](https://flask-wtf.readthedocs.io/en/stable/)
@@ -45,8 +57,9 @@ $ source venv/bin/activate
 The **Event Reminder** application depends on some specific environment variables. 
 To run application successfully the environment variables should be stored in `.env` file in the root application directory (`event-reminder` dir).
 
+Replace the values in `.env-example` with your own values and rename this file to `.env`
 ```
-# '.env' file
+# '.env' file example:
 SECRET_KEY=use-some-random-key
 APPLICATION_MODE='development'                     # for development will use SQLite db
 # APPLICATION_MODE='production'                    # for production will use PostgreSQL db
@@ -54,10 +67,10 @@ DEV_DATABASE_URL=sqlite:///app.db                  # example for SQLite
 PROD_DATABASE_URL=postgresql://reminderuser:password@db:5432/reminderdb     # example for PostgreSQL
 MAIL_SERVER=smtp.example.com
 MAIL_PORT=587
-MAIL_USERNAME=xxx.yyy@example.com               # account which will be used for SMTP email service
-MAIL_PASSWORD=xxxxxxx                           # password for above account
-ELASTICSEARCH_URL=http://localhost:9200         # optional
-CHECK_EMAIL_DOMAIN='False'                      # if 'True' validate whether email domain/MX record exist 
+MAIL_USERNAME=your.email@example.com               # account which will be used for SMTP email service
+MAIL_PASSWORD=yourpassword                         # password for above account
+ELASTICSEARCH_URL=http://localhost:9200            # optional
+CHECK_EMAIL_DOMAIN='False'                         # if 'True' validate whether email domain/MX record exist 
 ```
 The `.env` file will be imported by application on startup.
 
