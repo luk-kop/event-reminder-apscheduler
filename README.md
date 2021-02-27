@@ -1,5 +1,5 @@
 # Event Reminder
-***
+
 [![Python 3.7.7](https://img.shields.io/badge/python-3.8.5-blue.svg)](https://www.python.org/downloads/release/python-377/)
 [![Flask 1.1.1](https://img.shields.io/badge/Flask-1.1.1-blue.svg)](https://flask.palletsprojects.com/en/1.1.x/)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
@@ -8,7 +8,7 @@ The **Event Reminder** is a simple web application based on **[Flask](https://fl
  
 The main purpose of the **Event Reminder** application is to send notifications about upcoming events to selected users. The application allows a standard user to enter event data, process it and display with the **FullCalendar** API. Moreover, the application has a built-in admin panel for the management of users, events, notification service, display app related logs and basic system info on app dashboard partly based on **[Chart.js](https://www.chartjs.org/)**. Sending reminders through the notification service is performed by the SMTP e-mail server provided by the admin user and by the APScheduler library.
 The application has implemented integration with the **Elasticsearch** search engine.
-***
+
 ## Branch details
 The **Event Reminder** application has been designed in two versions with two different mechanisms to handle background (asynchronous) processes:
 - **APScheduler** (`master` branch)
@@ -20,7 +20,6 @@ This branch is dedicated for **APScheduler**. In order to change to `celery vers
 cd event-reminder/
 git checkout celery-version
 ```
-***
 
 ## Getting Started
 
