@@ -1,7 +1,7 @@
 # Event Reminder
 
 [![Python 3.7.7](https://img.shields.io/badge/python-3.8.5-blue.svg)](https://www.python.org/downloads/release/python-377/)
-[![Flask 1.1.1](https://img.shields.io/badge/Flask-1.1.1-blue.svg)](https://flask.palletsprojects.com/en/1.1.x/)
+[![Flask 1.1.1](https://img.shields.io/badge/Flask-1.1.2-blue.svg)](https://flask.palletsprojects.com/en/1.1.x/)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
 The **Event Reminder** is a simple web application based on **[Flask](https://flask.palletsprojects.com/en/1.1.x/)** framework, **[Bootstrap](https://getbootstrap.com/)** UI framework and **[FullCalendar](https://fullcalendar.io/)** full-sized JavaScript calendar. 
@@ -16,7 +16,7 @@ The **Event Reminder** application has been designed in two versions with two di
 
 This branch is dedicated for **APScheduler**. In order to change to `celery version` branch use the following commands:
 ```bash
-# After clonning repository
+# After cloning the repository
 cd event-reminder/
 git checkout celery-version
 ```
