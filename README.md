@@ -4,7 +4,7 @@
 [![Flask 1.1.1](https://img.shields.io/badge/Flask-1.1.2-blue.svg)](https://flask.palletsprojects.com/en/1.1.x/)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
-The **Event Reminder** is a simple web application based on **[Flask](https://flask.palletsprojects.com/en/1.1.x/)** framework, **[Bootstrap](https://getbootstrap.com/)** UI framework and **[FullCalendar](https://fullcalendar.io/)** full-sized JavaScript calendar. 
+>The **Event Reminder** is a simple web application based on **[Flask](https://flask.palletsprojects.com/en/1.1.x/)** framework, **[Bootstrap](https://getbootstrap.com/)** UI framework and **[FullCalendar](https://fullcalendar.io/)** full-sized JavaScript calendar. 
  
 The main purpose of the **Event Reminder** application is to send notifications about upcoming events to selected users. The application allows a standard user to enter event data, process it and display with the **FullCalendar** API. Moreover, the application has a built-in admin panel for the management of users, events, notification service, display app related logs and basic system info on app dashboard partly based on **[Chart.js](https://www.chartjs.org/)**. Sending reminders through the notification service is performed by the SMTP e-mail server provided by the admin user and by the APScheduler library.
 The application has implemented integration with the **Elasticsearch** search engine.
@@ -85,7 +85,7 @@ Then start a single node cluster with Docker:
 $ docker run --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -d docker.elastic.co/elasticsearch/elasticsearch:7.7.0
 ```
 
-### Running the App
+### Running the app
 
 Before running the **Event Reminder** app you can use script `init_db.py` to initialize database and add some dummy data that can be used later in the processing.
 ```bash
@@ -108,7 +108,7 @@ After adding dummy data, you can start the application. First of all set the `FL
 ## Installation with Docker-Compose
 The application can be also build and run locally with Docker-Compose tool. Docker-Compose allows you to create working out-of-the-box example of **Event Reminder** application with Gunicorn, Elasticsearch and PostgreSQL with some dummy data on board.
 
-### Running the App
+### Running the app
 To build and run app with Docker-Compose - clone the repo and follow the quick-start instructions below. 
 
 In order to correctly start the application, you must run the following commands in the project root directory (`event-reminder`).

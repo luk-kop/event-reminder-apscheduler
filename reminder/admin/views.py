@@ -65,6 +65,8 @@ def background_job():
         try:
             for event in events_to_notify:
                 users_to_notify = [user for user in event.notified_users]
+                if not users_to_notify:
+                    continue
                 users_notified = smtp_mail.send_email('Attention! Upcoming event!',
                                      users_to_notify,
                                      event,
