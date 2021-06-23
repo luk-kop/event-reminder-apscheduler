@@ -8,14 +8,16 @@ ENV PYTHONDONTWRITEBYTECODE 1
 # This keeps Python from buffering stdin/stdout
 ENV PYTHONUNBUFFERED 1
 
-# Copy project's files as web user
-COPY --chown=web:web . .
+COPY --chown=web:web requirements.txt .
 
-# install dependencies and gunicorn
+# Install dependencies and gunicorn
 RUN pip install --upgrade pip \
 	&& pip install -r requirements.txt \
 	&& pip install gunicorn \
 	&& apt-get update && apt-get install -y curl && apt-get clean
+
+# Copy project's files as web user
+COPY --chown=web:web . .
 
 USER web
 
