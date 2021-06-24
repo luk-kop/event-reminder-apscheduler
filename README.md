@@ -6,20 +6,8 @@
 
 >The **Event Reminder** is a simple web application based on **[Flask](https://flask.palletsprojects.com/en/1.1.x/)** framework, **[Bootstrap](https://getbootstrap.com/)** UI framework and **[FullCalendar](https://fullcalendar.io/)** full-sized JavaScript calendar. 
  
-The main purpose of the **Event Reminder** application is to send notifications about upcoming events to selected users. The application allows a standard user to enter event data, process it and display with the **FullCalendar** API. Moreover, the application has a built-in admin panel for the management of users, events, notification service, display app related logs and basic system info on app dashboard partly based on **[Chart.js](https://www.chartjs.org/)**. Sending reminders through the notification service is performed by the SMTP e-mail server provided by the admin user and by the APScheduler library.
+The main purpose of the **Event Reminder** application is to send notifications about upcoming events to selected users. The application allows a standard user to enter event data, process it and display with the **FullCalendar** API. Moreover, the application has a built-in admin panel for the management of users, events, notification service, display app related logs and basic system info on app dashboard partly based on **[Chart.js](https://www.chartjs.org/)**. Sending reminders through the notification service is performed by the SMTP e-mail server provided by the admin user and by the **APScheduler** library.
 The application has implemented integration with the **Elasticsearch** search engine.
-
-## Branch details
-The **Event Reminder** application has been designed in two versions with two different mechanisms to handle background (asynchronous) processes:
-- **APScheduler** (`master` branch)
-- **Celery** (`celery-version` branch)
-
-This branch is dedicated for **APScheduler**. In order to change to `celery version` branch use the following commands:
-```bash
-# After cloning the repository
-cd event-reminder/
-git checkout celery-version
-```
 
 ## Getting Started
 
